@@ -6,54 +6,164 @@
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
  .g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
- button{padding:16px 4px;font-size:16px;border:0;border-radius:10px;background:#2a6;color:#fff}
- button.b{background:#c63} button.s{background:#357} button.x{background:#555}
+ .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+ button{padding:14px 4px;font-size:16px;border:0;border-radius:10px;background:#2a6;color:#fff}
+ button.b{background:#c63} button.s{background:#357} button.x{background:#555} button.m{background:#a3c;font-size:18px}
  #con{width:100%;background:#36c;font-size:18px}
- #log{white-space:pre-wrap;background:#000;color:#8f8;height:180px;overflow:auto;font:12px monospace;padding:6px;margin-top:10px;border-radius:8px}
- input{width:100%;box-sizing:border-box;padding:12px;font-size:16px;border-radius:8px;border:0;margin-top:8px}
+ .dash{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+ .c{background:#222;border-radius:10px;padding:8px;text-align:center}
+ .c b{display:block;font-size:20px;margin-top:2px}
+ .c span{font-size:12px;color:#aaa}
+ #link{padding:6px;border-radius:8px;text-align:center;margin-top:8px;background:#633}
+ #log{white-space:pre-wrap;background:#000;color:#8f8;height:150px;overflow:auto;font:12px monospace;padding:6px;margin-top:10px;border-radius:8px}
+ input{width:100%;box-sizing:border-box;padding:12px;font-size:16px;border-radius:8px;border:0}
+ .row{display:grid;grid-template-columns:1fr 2fr 1fr 1.3fr;gap:6px;align-items:center;margin-top:6px}
+ #joyw{display:flex;flex-direction:column;align-items:center;margin-top:8px}
+ #joy{width:260px;height:260px;border-radius:50%;background:radial-gradient(#333,#1a1a1a);border:2px solid #555;position:relative;touch-action:none;user-select:none;-webkit-user-select:none}
+ #joy.on{border-color:#2a6}
+ #knob{width:90px;height:90px;border-radius:50%;background:#36c;position:absolute;left:85px;top:85px;pointer-events:none}
+ #joyv{font:14px monospace;margin-top:6px;color:#aaa}
+ #joybtn{width:100%;font-size:18px}
+ input[type=range]{width:100%}
+ details{margin-top:12px} summary{font-size:17px;font-weight:bold}
 </style></head><body>
 <button id="con">Подключиться к NB-BT</button>
-<h3>Светодиоды</h3>
-<div class="g">
+<div id="link">Плата сигвея: нет данных</div>
+
+<div class="dash">
+ <div class="c"><span>Режим</span><b id="d_mode">-</b></div>
+ <div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div>
+ <div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div>
+ <div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div>
+ <div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div>
+ <div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div>
+ <div class="c"><span>Imax, А</span><b id="d_imax">-</b></div>
+ <div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div>
+ <div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div>
+</div>
+
+<h3>Джойстик</h3>
+<button id="joybtn" class="x">Джойстик: ВЫКЛ</button>
+<div style="margin-top:8px">Макс. мощность: <b id="pwrv">30</b>%<input id="pwr" type="range" min="10" max="100" step="5" value="30"></div>
+<div id="joyw"><div id="joy"><div id="knob"></div></div><div id="joyv">руль 0 · газ 0</div></div>
+
+<h3>Управление платой</h3>
+<button class="m" style="width:100%" data-c="MODE+">Сменить режим ▶</button>
+<div class="g" style="grid-template-columns:repeat(5,1fr);margin-top:8px">
+ <button class="x" data-c="MODE=0">COM</button><button class="x" data-c="MODE=1">SIN</button>
+ <button class="x" data-c="MODE=2">VLT</button><button class="x" data-c="MODE=3">SPD</button><button class="x" data-c="MODE=4">TRQ</button>
+</div>
+<div class="row"><button class="s" onclick="step('imax',-1)">−</button><input id="imax" type="number" min="1" max="40" placeholder="Imax, А"><button class="s" onclick="step('imax',1)">+</button><button onclick="setv('IMAX','imax')">Ток</button></div>
+<div class="row"><button class="s" onclick="step('nmax',-50)">−</button><input id="nmax" type="number" min="10" max="2000" placeholder="Nmax"><button class="s" onclick="step('nmax',50)">+</button><button onclick="setv('NMAX','nmax')">Обороты</button></div>
+<div class="g3" style="margin-top:8px">
+ <button class="x" data-c="FW=0">Ослаб. поля выкл</button><button class="x" data-c="FW=1">Ослаб. поля вкл</button>
+ <button class="b" data-c="SAVE">Сохранить</button>
+</div>
+
+<details><summary>Тест BT-платы (светодиоды, буззер)</summary>
+<div class="g" style="margin-top:8px">
  <button data-c="L1">L1</button><button data-c="L2">L2</button>
  <button data-c="L3">L3</button><button data-c="L4">L4</button>
  <button data-c="LA=1" class="s">Все ВКЛ</button><button data-c="LA=0" class="x">Все ВЫКЛ</button>
  <button data-c="RUN" class="s">Бегущий</button><button data-c="INV" class="x">Инверсия</button>
-</div>
-<h3>Буззер</h3>
-<div class="g">
  <button data-c="BEEP" class="b">Пик</button><button data-c="B=1000,400" class="b">1 кГц</button>
  <button data-c="B=4000,400" class="b">4 кГц</button><button data-c="BOFF" class="x">Тихо</button>
- <button data-c="BON" class="b">Тон</button><button data-c="BDC=1" class="b">DC вкл</button>
- <button data-c="BDC=0" class="x">DC выкл</button><button data-c="?" class="s">Статус</button>
-</div>
-<h3>Линии UART (транзисторы)</h3>
-<div class="g">
+ <button data-c="BMIR=1" class="s">Буззер платы вкл</button><button data-c="BMIR=0" class="x">Буззер платы выкл</button>
+ <button data-c="FB" class="s">FB текстом</button><button data-c="?" class="s">Статус</button>
  <button data-c="P15=0" class="s">P15=0</button><button data-c="P15=1" class="x">P15=1</button>
  <button data-c="P16=0" class="s">P16=0</button><button data-c="P16=1" class="x">P16=1</button>
-</div>
-<input id="cmd" placeholder="Своя команда, Enter - отправить (U:текст - в UART)">
+</div></details>
+
+<input id="cmd" style="margin-top:10px" placeholder="Команда, Enter (например $SET N_MOT_MAX 500)">
 <div id="log"></div>
 <script>
 const NUS='6e400001-b5a3-f393-e0a9-e50e24dcca9e',RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e',TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e';
-let rx=null,dev=null;const log=t=>{const l=document.getElementById('log');l.textContent+=t;l.scrollTop=1e9};
+const TYP=['COM','SIN','FOC'],MOD=['OPEN','VLT','SPD','TRQ'];
+const ERR={0:'OK',1:'неизвестная команда',2:'неизвестный параметр',4:'вне диапазона',5:'нет значения',10:'колёса крутятся',11:'нужен FOC'};
+let rx=null,dev=null,inbuf='',filled=false;
+const $=id=>document.getElementById(id);
+const log=t=>{const l=$('log');l.textContent+=t;if(l.textContent.length>6000)l.textContent=l.textContent.slice(-4000);l.scrollTop=1e9};
+function onLine(s){
+ if(s.startsWith('#F,')){
+  const v=s.split(',').slice(1).map(Number);
+  const [typ,mod,imax,nmax,bat,temp,sl,sr,dc,st,err]=v;
+  $('d_mode').textContent=typ==2?'FOC-'+(MOD[mod]||mod):(TYP[typ]||typ);
+  $('d_bat').textContent=(bat/100).toFixed(1);
+  $('d_temp').textContent=(temp/10).toFixed(1);
+  $('d_l').textContent=sl; $('d_r').textContent=sr;
+  $('d_dc').textContent=(dc/100).toFixed(2);
+  $('d_imax').textContent=(imax/10).toFixed(1); $('d_nmax').textContent=nmax;
+  $('d_en').textContent=(st&1?'ВКЛ':'выкл')+(st&16?' 🕹':'')+(err?' E'+(err&255)+'/'+(err>>8):'')+(st&2?' TO':'');
+  if(!filled){$('imax').value=Math.round(imax/10);$('nmax').value=nmax;filled=true}
+  setLink(true);
+ }else if(s.startsWith('#A,')){const e=+s.slice(3);log('Плата: '+(ERR[e]||('ошибка '+e))+'\n')}
+ else if(s.startsWith('#L,')){setLink(s[3]=='1')}
+ else log(s+'\n');
+}
+function setLink(ok){$('link').textContent=ok?'Плата сигвея: связь есть':'Плата сигвея: нет связи';$('link').style.background=ok?'#263':'#633'}
 async function connect(){
  try{
   dev=await navigator.bluetooth.requestDevice({filters:[{services:[NUS]}],optionalServices:[NUS]});
-  dev.addEventListener('gattserverdisconnected',()=>{log('\n[отключено]\n');con.textContent='Подключиться к NB-BT'});
+  dev.addEventListener('gattserverdisconnected',()=>{setJoy(false);log('[отключено]\n');$('con').textContent='Подключиться к NB-BT';rx=null});
   const s=await(await dev.gatt.connect()).getPrimaryService(NUS);
   rx=await s.getCharacteristic(RX);
   const tx=await s.getCharacteristic(TX);
   await tx.startNotifications();
-  tx.addEventListener('characteristicvaluechanged',e=>log(new TextDecoder().decode(e.target.value)));
-  con.textContent='Подключено: '+dev.name;log('[подключено]\n');send('?');
+  tx.addEventListener('characteristicvaluechanged',e=>{
+   inbuf+=new TextDecoder().decode(e.target.value);
+   let i;while((i=inbuf.indexOf('\n'))>=0){onLine(inbuf.slice(0,i));inbuf=inbuf.slice(i+1)}
+  });
+  $('con').textContent='Подключено: '+dev.name;log('[подключено]\n');
  }catch(e){log('Ошибка: '+e+'\n')}
 }
 async function send(c){if(!rx){log('Сначала подключитесь\n');return}
  const d=new TextEncoder().encode(c);
  for(let i=0;i<d.length;i+=20)await rx.writeValueWithoutResponse(d.slice(i,i+20));}
-const con=document.getElementById('con');con.onclick=connect;
+function step(id,d){const e=$(id);e.value=Math.max(+e.min,Math.min(+e.max,(+e.value||0)+d))}
+function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
+
+// ---------- Джойстик ----------
+let joyOn=false,jx=0,jy=0,joyBusy=false,joyTimer=null;
+const joy=$('joy'),knob=$('knob');
+$('pwr').oninput=e=>$('pwrv').textContent=e.target.value;
+function joyPos(e){
+ const r=joy.getBoundingClientRect(),R=r.width/2;
+ let x=(e.clientX-r.left-R)/R,y=(e.clientY-r.top-R)/R;
+ const d=Math.hypot(x,y);if(d>1){x/=d;y/=d}
+ jx=x;jy=y;drawKnob();
+}
+function drawKnob(){
+ const R=joy.clientWidth/2,k=knob.clientWidth/2;
+ knob.style.left=(R-k+jx*(R-k))+'px';knob.style.top=(R-k+jy*(R-k))+'px';
+}
+joy.addEventListener('pointerdown',e=>{joy.setPointerCapture(e.pointerId);joyPos(e)});
+joy.addEventListener('pointermove',e=>{if(e.buttons||e.pressure>0)joyPos(e)});
+const release=()=>{jx=0;jy=0;drawKnob()};
+joy.addEventListener('pointerup',release);joy.addEventListener('pointercancel',release);
+function joyVals(){
+ const k=+$('pwr').value*10,dz=v=>Math.abs(v)<0.06?0:v;
+ return [Math.round(dz(jx)*k),Math.round(-dz(jy)*k)];   // руль, газ
+}
+async function joyTick(){
+ const [st,sp]=joyVals();
+ $('joyv').textContent='руль '+st+' · газ '+sp;
+ if(!rx||joyBusy)return;
+ joyBusy=true;
+ try{await rx.writeValueWithoutResponse(new TextEncoder().encode('J,'+st+','+sp))}catch(e){}
+ joyBusy=false;
+}
+function setJoy(on){
+ joyOn=on;release();
+ $('joybtn').textContent='Джойстик: '+(on?'ВКЛ':'ВЫКЛ');$('joybtn').className=on?'':'x';
+ joy.classList.toggle('on',on);
+ clearInterval(joyTimer);
+ if(on)joyTimer=setInterval(joyTick,50);   // 20 раз в секунду; перестанет слать - плата остановится через 0,3 с
+ else{jx=jy=0;joyTick()}
+}
+$('joybtn').onclick=()=>setJoy(!joyOn);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&joyOn)setJoy(false)});
+$('con').onclick=connect;
 document.querySelectorAll('button[data-c]').forEach(b=>b.onclick=()=>send(b.dataset.c));
-document.getElementById('cmd').onkeydown=e=>{if(e.key==='Enter'){send(e.target.value);e.target.value=''}};
-if(!navigator.bluetooth)log('Web Bluetooth недоступен: откройте в Chrome на Android (https или localhost)\n');
+$('cmd').onkeydown=e=>{if(e.key==='Enter'){send(e.target.value);e.target.value=''}};
+if(!navigator.bluetooth)log('Web Bluetooth недоступен: откройте в Bluefy (iPhone) или Chrome (Android)\n');
 </script></body></html>
