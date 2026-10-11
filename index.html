@@ -25,6 +25,9 @@
  #joyv{font:14px monospace;margin-top:6px;color:#aaa}
  #joybtn{width:100%;font-size:18px}
  input[type=range]{width:100%}
+ .bar{height:14px;background:#333;border-radius:7px;overflow:hidden;margin-top:4px}
+ .bar i{display:block;height:100%;width:0;background:#2a6}
+ #calbox{display:none;background:#432;border-radius:10px;padding:8px;margin-top:8px;font:14px monospace}
  details{margin-top:12px} summary{font-size:17px;font-weight:bold}
 </style></head><body>
 <button id="con">Подключиться к NB-BT</button>
@@ -46,6 +49,24 @@
 <button id="joybtn" class="x">Джойстик: ВЫКЛ</button>
 <div style="margin-top:8px">Макс. мощность: <b id="pwrv">30</b>%<input id="pwr" type="range" min="10" max="100" step="5" value="30"></div>
 <div id="joyw"><div id="joy"><div id="knob"></div></div><div id="joyv">руль 0 · газ 0</div></div>
+
+<h3>Педали (hovercar)</h3>
+<div class="dash" style="grid-template-columns:1fr 1fr">
+ <div class="c"><span>Газ</span><b id="p_thr">-</b><div class="bar"><i id="p_thrb"></i></div><span id="p_thrr"></span></div>
+ <div class="c"><span>Тормоз</span><b id="p_brk">-</b><div class="bar"><i id="p_brkb" style="background:#c63"></i></div><span id="p_brkr"></span></div>
+</div>
+<div id="p_st" style="text-align:center;margin-top:6px;color:#aaa">-</div>
+<div class="g3" style="margin-top:8px">
+ <button class="s" data-c="PED=1">Педали вкл</button><button class="x" data-c="PED=0">Педали выкл</button>
+ <button class="m" data-c="REV">Вперёд/Назад</button>
+</div>
+<div class="g3" style="margin-top:8px">
+ <button class="b" id="calstart" data-c="CAL">Калибровка</button>
+ <button id="calsave" data-c="CALSAVE">Сохранить калибровку</button>
+ <button class="x" data-c="CALCANCEL">Отмена</button>
+</div>
+<button class="x" style="width:100%;margin-top:8px" onclick="if(confirm('Вернуть 1.0–2.5 В по умолчанию?'))send('CALRESET')">Сбросить калибровку (1.0–2.5 В)</button>
+<div id="calbox"></div>
 
 <h3>Управление платой</h3>
 <button class="m" style="width:100%" data-c="MODE+">Сменить режим ▶</button>
@@ -96,9 +117,32 @@ function onLine(s){
   $('d_en').textContent=(st&1?'ВКЛ':'выкл')+(st&16?' 🕹':'')+(err?' E'+(err&255)+'/'+(err>>8):'')+(st&2?' TO':'');
   if(!filled){$('imax').value=Math.round(imax/10);$('nmax').value=nmax;filled=true}
   setLink(true);
- }else if(s.startsWith('#A,')){const e=+s.slice(3);log('Плата: '+(ERR[e]||('ошибка '+e))+'\n')}
+ } else if(s.startsWith('#P,'))onPed(s.split(',').slice(1).map(Number));
+ else if(s.startsWith('#C,'))onCal(s.split(',').slice(1));
+ else if(s.startsWith('#A,')){const e=+s.slice(3);log('Плата: '+(ERR[e]||('ошибка '+e))+'\n')}
  else if(s.startsWith('#L,')){setLink(s[3]=='1')}
  else log(s+'\n');
+}
+const V=r=>(r*3.6/1023).toFixed(2);
+function onPed(v){
+ const [tr,br,thr,brk,flt,rev,on,tmin,tmax,bmin,bmax]=v;
+ $('p_thr').textContent=(flt&1)?'ОБРЫВ':Math.round(thr/10)+'%';
+ $('p_brk').textContent=(flt&2)?'ОБРЫВ':Math.round(brk/10)+'%';
+ $('p_thrb').style.width=thr/10+'%';$('p_brkb').style.width=brk/10+'%';
+ $('p_thrr').textContent=V(tr)+' В ('+V(tmin)+'–'+V(tmax)+')';
+ $('p_brkr').textContent=V(br)+' В ('+V(bmin)+'–'+V(bmax)+')';
+ $('p_st').textContent=(on?'Педали вкл':'Педали выкл')+' · '+(rev?'НАЗАД':'вперёд');
+}
+function onCal(a){
+ const b=$('calbox');
+ if(a[0]=='1'){b.style.display='block';
+  if(a.length>=7){const [tl,th,bl,bh,tn,bn]=a.slice(1).map(Number);
+   b.innerHTML='КАЛИБРОВКА: нажмите оба курка до упора и отпустите<br>Газ: '+V(tn)+' В · мин '+V(tl)+' · макс '+V(th)+'<br>Тормоз: '+V(bn)+' В · мин '+V(bl)+' · макс '+V(bh)}
+  else b.textContent='КАЛИБРОВКА: нажмите оба курка до упора и отпустите';}
+ else if(a[0]=='OK'){b.style.display='none';log('Калибровка сохранена\n')}
+ else if(a[0]=='0'){b.style.display='none';log('Калибровка отменена\n')}
+ else if(a[0]=='ERR'){const e=+a[1];
+  log('Калибровка: '+(e&8?'сначала нажмите «Калибровка»':(e&4?'ошибка записи flash (действует до сброса)':'малый ход'+(e&1?' газа':'')+(e&2?' тормоза':'')+' - нажмите до упора и снова «Сохранить»'))+'\n')}
 }
 function setLink(ok){$('link').textContent=ok?'Плата сигвея: связь есть':'Плата сигвея: нет связи';$('link').style.background=ok?'#263':'#633'}
 async function connect(){
@@ -113,7 +157,7 @@ async function connect(){
    inbuf+=new TextDecoder().decode(e.target.value);
    let i;while((i=inbuf.indexOf('\n'))>=0){onLine(inbuf.slice(0,i));inbuf=inbuf.slice(i+1)}
   });
-  $('con').textContent='Подключено: '+dev.name;log('[подключено]\n');
+  $('con').textContent='Подключено: '+dev.name;log('[подключено]\n');send('PRAW');
  }catch(e){log('Ошибка: '+e+'\n')}
 }
 async function send(c){if(!rx){log('Сначала подключитесь\n');return}
@@ -137,9 +181,9 @@ function drawKnob(){
  knob.style.left=(R-k+jx*(R-k))+'px';knob.style.top=(R-k+jy*(R-k))+'px';
 }
 joy.addEventListener('pointerdown',e=>{joy.setPointerCapture(e.pointerId);joyPos(e)});
-joy.addEventListener('pointermove',e=>{if(e.buttons||e.pressure>0)joyPos(e)});
+joy.addEventListener('pointermove',e=>{if(joy.hasPointerCapture(e.pointerId))joyPos(e)});
 const release=()=>{jx=0;jy=0;drawKnob()};
-joy.addEventListener('pointerup',release);joy.addEventListener('pointercancel',release);
+joy.addEventListener('pointerup',release);joy.addEventListener('pointercancel',release);joy.addEventListener('lostpointercapture',release);
 function joyVals(){
  const k=+$('pwr').value*10,dz=v=>Math.abs(v)<0.06?0:v;
  return [Math.round(dz(jx)*k),Math.round(-dz(jy)*k)];   // руль, газ
