@@ -44,6 +44,10 @@
  <div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div>
  <div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div>
 </div>
+<div class="dash" style="grid-template-columns:2fr 1fr">
+ <div class="c"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div>
+ <div class="c"><span>Диаметр колеса, дюйм</span><input id="wheeld" type="number" min="4" max="30" step="0.1" style="width:100%"></div>
+</div>
 
 <h3>Режим управления</h3>
 <div id="hcm" style="text-align:center;margin-bottom:6px;color:#aaa">Режим: -</div>
@@ -120,6 +124,7 @@ function onLine(s){
   $('d_bat').textContent=(bat/100).toFixed(1);
   $('d_temp').textContent=(temp/10).toFixed(1);
   $('d_l').textContent=sl; $('d_r').textContent=sr;
+  $('d_kmh').textContent=kmh(Math.min(Math.abs(sl),Math.abs(sr))).toFixed(1);
   $('d_dc').textContent=(dc/100).toFixed(2);
   $('d_imax').textContent=(imax/10).toFixed(1); $('d_nmax').textContent=nmax;
   $('hcm').textContent='Режим: '+(st&64?'Hovercar (педали)':'Джойстик');
@@ -173,6 +178,11 @@ async function send(c){if(!rx){log('Сначала подключитесь\n');
  const d=new TextEncoder().encode(c);
  for(let i=0;i<d.length;i+=20)await rx.writeValueWithoutResponse(d.slice(i,i+20));}
 function step(id,d){const e=$(id);e.value=Math.max(+e.min,Math.min(+e.max,(+e.value||0)+d))}
+// Скорость: об/мин колеса -> км/ч. Диаметр хранится в браузере (localStorage), по умолчанию 10.5"
+let wheelD=parseFloat(localStorage.getItem('wheelD'))||10.5;
+function kmh(rpm){return rpm*Math.PI*wheelD*0.0254*60/1000}
+$('wheeld').value=wheelD;
+$('wheeld').onchange=e=>{const v=parseFloat(e.target.value);if(v>=4&&v<=30){wheelD=v;localStorage.setItem('wheelD',v)}else e.target.value=wheelD};
 function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
 
