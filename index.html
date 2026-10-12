@@ -45,6 +45,12 @@
  <div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div>
 </div>
 
+<h3>Режим управления</h3>
+<div id="hcm" style="text-align:center;margin-bottom:6px;color:#aaa">Режим: -</div>
+<div class="g3" style="grid-template-columns:1fr 1fr">
+ <button class="m" data-c="HC=1">Hovercar (педали)</button><button class="m" data-c="HC=0">Джойстик</button>
+</div>
+
 <h3>Джойстик</h3>
 <button id="joybtn" class="x">Джойстик: ВЫКЛ</button>
 <div style="margin-top:8px">Макс. мощность: <b id="pwrv">30</b>%<input id="pwr" type="range" min="10" max="100" step="5" value="30"></div>
@@ -69,13 +75,15 @@
 <div id="calbox"></div>
 
 <h3>Управление платой</h3>
-<button class="m" style="width:100%" data-c="MODE+">Сменить режим ▶</button>
 <div class="g" style="grid-template-columns:repeat(5,1fr);margin-top:8px">
  <button class="x" data-c="MODE=0">COM</button><button class="x" data-c="MODE=1">SIN</button>
  <button class="x" data-c="MODE=2">VLT</button><button class="x" data-c="MODE=3">SPD</button><button class="x" data-c="MODE=4">TRQ</button>
 </div>
 <div class="row"><button class="s" onclick="step('imax',-1)">−</button><input id="imax" type="number" min="1" max="40" placeholder="Imax, А"><button class="s" onclick="step('imax',1)">+</button><button onclick="setv('IMAX','imax')">Ток</button></div>
 <div class="row"><button class="s" onclick="step('nmax',-50)">−</button><input id="nmax" type="number" min="10" max="2000" placeholder="Nmax"><button class="s" onclick="step('nmax',50)">+</button><button onclick="setv('NMAX','nmax')">Обороты</button></div>
+<div class="g" style="margin-top:6px">
+ <button class="s" onclick="nq(120)">120</button><button class="s" onclick="nq(200)">200</button><button class="s" onclick="nq(300)">300</button><button class="b" onclick="nq(2000)">Макс</button>
+</div>
 <div class="g3" style="margin-top:8px">
  <button class="x" data-c="FW=0">Ослаб. поля выкл</button><button class="x" data-c="FW=1">Ослаб. поля вкл</button>
  <button class="b" data-c="SAVE">Сохранить</button>
@@ -114,6 +122,7 @@ function onLine(s){
   $('d_l').textContent=sl; $('d_r').textContent=sr;
   $('d_dc').textContent=(dc/100).toFixed(2);
   $('d_imax').textContent=(imax/10).toFixed(1); $('d_nmax').textContent=nmax;
+  $('hcm').textContent='Режим: '+(st&64?'Hovercar (педали)':'Джойстик');
   $('d_en').textContent=(st&1?'ВКЛ':'выкл')+(st&16?' 🕹':'')+(err?' E'+(err&255)+'/'+(err>>8):'')+(st&2?' TO':'');
   if(!filled){$('imax').value=Math.round(imax/10);$('nmax').value=nmax;filled=true}
   setLink(true);
@@ -164,6 +173,7 @@ async function send(c){if(!rx){log('Сначала подключитесь\n');
  const d=new TextEncoder().encode(c);
  for(let i=0;i<d.length;i+=20)await rx.writeValueWithoutResponse(d.slice(i,i+20));}
 function step(id,d){const e=$(id);e.value=Math.max(+e.min,Math.min(+e.max,(+e.value||0)+d))}
+function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
 
 // ---------- Джойстик ----------
