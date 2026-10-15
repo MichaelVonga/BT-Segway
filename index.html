@@ -288,8 +288,7 @@ function drawOrient(ax,ay,az){
   $('board3d_inner').style.transform =
     'rotateX('+(38-pd_deg)+'deg) rotateY('+(rd_deg)+'deg)';
   // Задняя сторона видна когда плата перевёрнута (nz < 0)
-  const flipped = nz < 0;
-  $('board_back').style.display = flipped ? 'flex' : 'none';
+  const b=$('board_back'); if(b) b.style.display=(nz<0?'flex':'none');
 }
 function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
