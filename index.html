@@ -269,7 +269,7 @@ function drawOrient(ax,ay,az){
   const pd_deg = pitch*180/Math.PI;
   const rd_deg = roll *180/Math.PI;
   $('board3d_inner').style.transform =
-    'rotateX('+(-pd_deg)+'deg) rotateZ('+(rd_deg)+'deg)';
+    'rotateX('+(-pd_deg)+'deg) rotateZ('+(-rd_deg)+'deg)';
 }
 function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
