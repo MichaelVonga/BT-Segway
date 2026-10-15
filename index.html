@@ -30,7 +30,7 @@
  #calbox{display:none;background:#432;border-radius:10px;padding:8px;margin-top:8px;font:14px monospace}
  details{margin-top:12px} summary{font-size:17px;font-weight:bold}
 
-  .face{position:absolute;width:200px;border-radius:3px}
+  .face{position:absolute;width:200px;border-radius:3px}.face-front{backface-visibility:hidden}
 </style></head><body>
 <button id="con">Подключиться к NB-BT</button>
 <div class="dash">
@@ -46,7 +46,7 @@
  <div id="board3d_inner" style="width:220px;height:120px;position:relative;transform-style:preserve-3d;transition:transform .1s">
 
   <!-- PCB основа -->
-  <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b,#0d3a0d);border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a"></div>
+  <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b,#0d3a0d);border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a;backface-visibility:hidden"></div>
 
   <!-- Боковые грани -->
   <div class="face" style="transform:rotateX( 90deg) translateZ(60px);height:14px;top:53px;background:#0c280c;border:1px solid #2a2"></div>
@@ -89,6 +89,23 @@
 
   <!-- Центральный чип -->
   <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:36px;height:30px;background:#222;border:1px solid #666;border-radius:2px"></div>
+
+  <!-- Задняя сторона платы (backface) -->
+  <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1a1a2a,#111120);border:2px solid #335;border-radius:5px;backface-visibility:hidden;transform:rotateY(180deg)">
+   <!-- Силовой разъём — крупный, вверху по центру -->
+   <div style="position:absolute;left:50%;top:6px;transform:translateX(-50%);width:48px">
+    <svg width="48" height="30" style="display:block">
+     <!-- корпус разъёма -->
+     <rect x="1" y="4" width="46" height="24" rx="2" fill="#222" stroke="#888" stroke-width="1.5"/>
+     <!-- три контакта -->
+     <rect x="7"  y="9" width="10" height="14" rx="1" fill="#c0a000" stroke="#ffe060" stroke-width="1"/>
+     <rect x="19" y="9" width="10" height="14" rx="1" fill="#c0a000" stroke="#ffe060" stroke-width="1"/>
+     <rect x="31" y="9" width="10" height="14" rx="1" fill="#c0a000" stroke="#ffe060" stroke-width="1"/>
+     <!-- защёлка -->
+     <rect x="18" y="0" width="12" height="5" rx="1" fill="#555" stroke="#888" stroke-width="1"/>
+    </svg>
+   </div>
+  </div>
 
   <!-- Маркер направления -->
   <div style="position:absolute;bottom:10%;right:12%;font-size:16px;color:#8f8;opacity:.8">&#9654;</div>
@@ -262,10 +279,16 @@ $('wheeld').value=wheelD;
 $('wheeld').onchange=e=>{const v=parseFloat(e.target.value);if(v>=4&&v<=30){wheelD=v;localStorage.setItem('wheelD',v)}else e.target.value=wheelD};
 
 function drawOrient(ax,ay,az){
-  const pitch = Math.atan2(ay, az);
-  const roll  = Math.atan2(-ax, Math.sqrt(ay*ay + az*az));
-  const pd_deg = pitch*180/Math.PI;
-  const rd_deg = roll *180/Math.PI;
+  // Нормализуем вектор гравитации
+  const mag = Math.sqrt(ax*ax+ay*ay+az*az);
+  if(mag<0.05) return;
+  const nx=ax/mag, ny=ay/mag, nz=az/mag;
+  // asin для pitch: диапазон [-90..+90°], без разрыва при перевороте
+  const pitch_r = Math.asin(Math.max(-1,Math.min(1,ny)));
+  // roll: atan2 по горизонтальной плоскости - тоже без разрыва
+  const roll_r  = Math.atan2(-nx, Math.sqrt(ny*ny+nz*nz));
+  const pd_deg = pitch_r*180/Math.PI;
+  const rd_deg = roll_r *180/Math.PI;
   $('d_angles').textContent = 'pitch: '+pd_deg.toFixed(1)+' °   roll: '+rd_deg.toFixed(1)+' °';
   $('board3d_inner').style.transform =
     'rotateX('+(38-pd_deg)+'deg) rotateY('+(rd_deg)+'deg)';
