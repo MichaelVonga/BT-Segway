@@ -30,7 +30,7 @@
  #calbox{display:none;background:#432;border-radius:10px;padding:8px;margin-top:8px;font:14px monospace}
  details{margin-top:12px} summary{font-size:17px;font-weight:bold}
 
-  #d_orient{display:block;margin:0 auto}
+  .face{position:absolute;width:200px;border-radius:3px}
 </style></head><body>
 <button id="con">Подключиться к NB-BT</button>
 <div class="dash">
@@ -41,7 +41,91 @@
  <div class="c"><span>Ускор Y, g</span><b id="d_ay">-</b></div>
  <div class="c"><span>Ускор Z, g</span><b id="d_az">-</b></div>
 </div>
-<canvas id="d_orient" width="260" height="160" title="Положение платы (по акселерометру)"></canvas>
+<div id="board3d" style="perspective:500px;height:200px;display:flex;align-items:center;justify-content:center;margin:6px 0">
+ <div id="board3d_inner" style="width:220px;height:120px;position:relative;transform-style:preserve-3d;transition:transform .1s">
+
+  <!-- ===== PCB основа ===== -->
+  <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b 0%,#0d3a0d 100%);
+    border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a"></div>
+
+  <!-- ===== Боковые грани (translate = половина высоты/ширины) ===== -->
+  <div class="face" style="transform:rotateX( 90deg) translateZ(60px);height:14px;top:53px;background:#0c280c;border:1px solid #2a2"></div>
+  <div class="face" style="transform:rotateX(-90deg) translateZ(60px);height:14px;top:53px;background:#0c280c;border:1px solid #2a2"></div>
+  <div class="face" style="transform:rotateY( 90deg) translateZ(110px);width:14px;left:96px;background:#0c280c;border:1px solid #2a2"></div>
+  <div class="face" style="transform:rotateY(-90deg) translateZ(110px);width:14px;left:96px;background:#0c280c;border:1px solid #2a2"></div>
+
+  <!-- ===== Разъём BT (трапеция, сужается к низу) ===== -->
+  <div style="position:absolute;left:50%;top:3px;transform:translateX(-50%);
+    width:0;height:0;
+    border-left:18px solid transparent;
+    border-right:18px solid transparent;
+    border-top:22px solid #555">
+  </div>
+  <!-- кайма разъёма (тело под трапецией) -->
+  <div style="position:absolute;left:50%;top:3px;transform:translateX(-50%);
+    width:28px;height:16px;background:#444;border:1px solid #888;border-radius:1px 1px 0 0">
+    <!-- пины внутри разъёма -->
+    <div style="display:flex;justify-content:space-around;padding:3px 4px">
+      <div style="width:2px;height:8px;background:#ddd"></div>
+      <div style="width:2px;height:8px;background:#ddd"></div>
+      <div style="width:2px;height:8px;background:#ddd"></div>
+      <div style="width:2px;height:8px;background:#ddd"></div>
+    </div>
+  </div>
+
+  <!-- ===== Конденсаторы слева от BT ===== -->
+  <div style="position:absolute;left:50%;top:5px;margin-left:-46px;display:flex;gap:3px">
+    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+  </div>
+  <!-- ===== Конденсаторы справа от BT ===== -->
+  <div style="position:absolute;left:50%;top:5px;margin-left:22px;display:flex;gap:3px">
+    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+  </div>
+
+  <!-- ===== МОСФЕТЫ левый бок ===== -->
+  <div style="position:absolute;left:4px;top:28px;display:flex;flex-direction:column;gap:4px">
+    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px;
+      box-shadow:1px 1px 2px #0006">
+      <div style="width:4px;height:100%;background:#666;margin:0 auto"></div>
+    </div>
+    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px;
+      box-shadow:1px 1px 2px #0006">
+      <div style="width:4px;height:100%;background:#666;margin:0 auto"></div>
+    </div>
+  </div>
+
+  <!-- ===== МОСФЕТЫ правый бок ===== -->
+  <div style="position:absolute;right:4px;top:28px;display:flex;flex-direction:column;gap:4px">
+    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px;
+      box-shadow:-1px 1px 2px #0006">
+      <div style="width:4px;height:100%;background:#666;margin:0 auto"></div>
+    </div>
+    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px;
+      box-shadow:-1px 1px 2px #0006">
+      <div style="width:4px;height:100%;background:#666;margin:0 auto"></div>
+    </div>
+  </div>
+
+  <!-- ===== Центральный чип (микроконтроллер) ===== -->
+  <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:36px;height:30px;background:#222;border:1px solid #666;border-radius:2px">
+    <div style="position:absolute;inset:3px;background:#1a1a1a;border:1px solid #444"></div>
+    <div style="position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);
+      width:18px;height:2px;background:#555"></div>
+  </div>
+
+  <!-- ===== Маркер "вперёд" ===== -->
+  <div style="position:absolute;bottom:10%;right:12%;font-size:16px;color:#8f8;opacity:.8">▶</div>
+
+  <!-- разметочные дорожки -->
+  <div style="position:absolute;top:38%;left:22px;right:22px;height:1px;background:#1a4a1a;opacity:.6"></div>
+  <div style="position:absolute;top:62%;left:22px;right:22px;height:1px;background:#1a4a1a;opacity:.6"></div>
+
+ </div>
+</div>
+<div id="d_angles" style="text-align:center;font:13px monospace;color:#cde;margin-bottom:4px">pitch: -- ° &nbsp; roll: -- °</div>
 <div id="link">Плата сигвея: нет данных</div>
 
 <div class="dash">
@@ -207,42 +291,18 @@ $('wheeld').value=wheelD;
 $('wheeld').onchange=e=>{const v=parseFloat(e.target.value);if(v>=4&&v<=30){wheelD=v;localStorage.setItem('wheelD',v)}else e.target.value=wheelD};
 
 function drawOrient(ax,ay,az){
-  const cv=$('d_orient'),ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
-  ctx.clearRect(0,0,W,H);
-  // уголы наклона из акселерометра
-  const pitch=Math.atan2(ay,az),roll=Math.atan2(-ax,Math.sqrt(ay*ay+az*az));
-  const pd=pitch*180/Math.PI,rd=roll*180/Math.PI;
-  // рисуем плату (вид сбоку)
-  ctx.save();
-  ctx.translate(W/2,H/2);
-  ctx.rotate(roll);
-  // корпус платы
-  const W2=100,H2=50;
-  ctx.fillStyle='#1a3a5c';
-  ctx.strokeStyle='#4af';
-  ctx.lineWidth=2;
-  ctx.beginPath();
-  ctx.rect(-W2/2,-H2/2,W2,H2);
-  ctx.fill();ctx.stroke();
-  // ось X (красная)
-  ctx.strokeStyle='#f44';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W2/2,0);ctx.stroke();
-  // ось Y (зеленая)
-  ctx.strokeStyle='#4f4';
-  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-H2/2);ctx.stroke();
-  // направление вперёд
-  ctx.fillStyle='#aef';
-  ctx.beginPath();ctx.moveTo(20,-8);ctx.lineTo(40,0);ctx.lineTo(20,8);ctx.closePath();ctx.fill();
-  ctx.restore();
-  // текст углов
-  ctx.fillStyle='#cde';
-  ctx.font='13px monospace';
-  ctx.fillText('pitch: '+pd.toFixed(1)+'°', 8, H-28);
-  ctx.fillText('roll:  '+rd.toFixed(1)+'°', 8, H-12);
-  // горизонт (pitch)
-  ctx.strokeStyle='#888';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  const pitch = Math.atan2(ay, az);
+  const roll  = Math.atan2(-ax, Math.sqrt(ay*ay + az*az));
+  const pd = (pitch*180/Math.PI).toFixed(1);
+  const rd = (roll *180/Math.PI).toFixed(1);
+  $('d_angles').textContent = 'pitch: '+pd+' °   roll: '+rd+' °';
+  // CSS 3D: rotateX = pitch (наклон вперёд/назад), rotateZ = roll (крен)
+  const pd_deg = pitch*180/Math.PI;
+  const rd_deg = roll *180/Math.PI;
+  $('board3d_inner').style.transform =
+    'rotateX('+(-pd_deg)+'deg) rotateZ('+(rd_deg)+'deg)';
 }
+function nq(n){
 function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
 
