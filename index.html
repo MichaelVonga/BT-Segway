@@ -28,70 +28,75 @@
  .bar{height:14px;background:#333;border-radius:7px;overflow:hidden;margin-top:4px}
  .bar i{display:block;height:100%;width:0;background:#2a6}
  #calbox{display:none;background:#432;border-radius:10px;padding:8px;margin-top:8px;font:14px monospace}
- .face{position:absolute;width:200px;border-radius:3px}
- #board3d{perspective:500px;height:220px;display:flex;align-items:center;justify-content:center;margin:6px 0}
- #b3i{width:220px;height:120px;position:relative;transform-style:preserve-3d;transition:transform .1s}
- #board_back{position:absolute;inset:0;background:linear-gradient(160deg,#1a1a2a,#111120);border:2px solid #335;border-radius:5px;display:none;align-items:flex-start;justify-content:center;padding-top:8px}
- #d_angles{text-align:center;font:13px monospace;color:#cde;margin-bottom:4px}
  details{margin-top:12px} summary{font-size:17px;font-weight:bold}
+
+  .face{position:absolute;width:200px;border-radius:3px}
 </style></head><body>
 <button id="con">Подключиться к NB-BT</button>
-<div id="board3d">
+<div class="dash">
+ <div class="c"><span>Гироскоп X, °/с</span><b id="d_gx">-</b></div>
+ <div class="c"><span>Гироскоп Y, °/с</span><b id="d_gy">-</b></div>
+ <div class="c"><span>Гироскоп Z, °/с</span><b id="d_gz">-</b></div>
+ <div class="c"><span>Ускор X, g</span><b id="d_ax">-</b></div>
+ <div class="c"><span>Ускор Y, g</span><b id="d_ay">-</b></div>
+ <div class="c"><span>Ускор Z, g</span><b id="d_az">-</b></div>
+</div>
+<div id="board3d" style="perspective:500px;height:220px;display:flex;align-items:center;justify-content:center;margin:6px 0">
  <div style="transform-style:preserve-3d;transform:rotateX(-38deg)">
-  <div id="b3i">
-   <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b,#0d3a0d);border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a"></div>
-   <div class="face" style="transform:rotateX( 90deg) translateZ(60px);height:14px;top:53px;background:#0c280c;border:1px solid #2a2"></div>
-   <div class="face" style="transform:rotateX(-90deg) translateZ(60px);height:14px;top:53px;background:#0c280c;border:1px solid #2a2"></div>
-   <div class="face" style="transform:rotateY( 90deg) translateZ(110px);width:14px;left:96px;background:#0c280c;border:1px solid #2a2"></div>
-   <div class="face" style="transform:rotateY(-90deg) translateZ(110px);width:14px;left:96px;background:#0c280c;border:1px solid #2a2"></div>
-   <div style="position:absolute;left:50%;top:2px;transform:translateX(-50%);width:32px">
-    <svg width="32" height="22" style="display:block">
-     <polygon points="16,0 32,6 26,22 6,22 0,6" fill="#444" stroke="#888" stroke-width="1"/>
-     <line x1="8"  y1="6" x2="8"  y2="18" stroke="#ddd" stroke-width="2"/>
-     <line x1="14" y1="6" x2="14" y2="18" stroke="#ddd" stroke-width="2"/>
-     <line x1="20" y1="6" x2="20" y2="18" stroke="#ddd" stroke-width="2"/>
-     <line x1="26" y1="6" x2="26" y2="18" stroke="#ddd" stroke-width="2"/>
-    </svg>
-   </div>
-   <div style="position:absolute;left:calc(50% - 48px);top:4px;display:flex;gap:3px">
-    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
-    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
-   </div>
-   <div style="position:absolute;left:calc(50% + 24px);top:4px;display:flex;gap:3px">
-    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
-    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
-   </div>
-   <div style="position:absolute;left:4px;top:28px;display:flex;flex-direction:column;gap:4px">
-    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
-    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
-   </div>
-   <div style="position:absolute;right:4px;top:28px;display:flex;flex-direction:column;gap:4px">
-    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
-    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
-   </div>
-   <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:36px;height:30px;background:#222;border:1px solid #666;border-radius:2px"></div>
-   <div id="board_back">
-    <svg width="56" height="34" style="display:block">
-     <rect x="1" y="5" width="54" height="27" rx="2" fill="#222" stroke="#888" stroke-width="1.5"/>
-     <rect x="7"  y="10" width="12" height="15" rx="1" fill="#c0a000" stroke="#ffe060" stroke-width="1"/>
-     <rect x="22" y="10" width="12" height="15" rx="1" fill="#c0a000" stroke="#ffe060" stroke-width="1"/>
-     <rect x="37" y="10" width="12" height="15" rx="1" fill="#c0a000" stroke="#ffe060" stroke-width="1"/>
-     <rect x="20" y="0"  width="16" height="6"  rx="1" fill="#555"    stroke="#888" stroke-width="1"/>
-    </svg>
-   </div>
-   <div style="position:absolute;bottom:10%;right:12%;font-size:16px;color:#8f8;opacity:.8">&#9654;</div>
+ <div id="board3d_inner" style="width:220px;height:120px;position:relative;transform-style:preserve-3d;transition:transform .1s">
+
+  <!-- PCB основа -->
+  <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b,#0d3a0d);border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a"></div>
+
+  <!-- Боковые грани -->
+  <div class="face" style="transform:rotateX( 90deg) translateZ(60px);height:14px;top:53px;background:#0c280c;border:1px solid #2a2"></div>
+  <div class="face" style="transform:rotateX(-90deg) translateZ(60px);height:14px;top:53px;background:#0c280c;border:1px solid #2a2"></div>
+  <div class="face" style="transform:rotateY( 90deg) translateZ(110px);width:14px;left:96px;background:#0c280c;border:1px solid #2a2"></div>
+  <div class="face" style="transform:rotateY(-90deg) translateZ(110px);width:14px;left:96px;background:#0c280c;border:1px solid #2a2"></div>
+
+  <!-- BT разъём (трапеция) — чистый SVG чтобы не плодить div-баланс -->
+  <div style="position:absolute;left:50%;top:2px;transform:translateX(-50%);width:32px">
+   <svg width="32" height="22" style="display:block">
+    <polygon points="16,0 32,6 26,22 6,22 0,6" fill="#444" stroke="#888" stroke-width="1"/>
+    <line x1="8" y1="6" x2="8" y2="18" stroke="#ddd" stroke-width="2"/>
+    <line x1="14" y1="6" x2="14" y2="18" stroke="#ddd" stroke-width="2"/>
+    <line x1="20" y1="6" x2="20" y2="18" stroke="#ddd" stroke-width="2"/>
+    <line x1="26" y1="6" x2="26" y2="18" stroke="#ddd" stroke-width="2"/>
+   </svg>
   </div>
+
+  <!-- Конденсаторы слева от BT -->
+  <div style="position:absolute;left:calc(50% - 48px);top:4px;display:flex;gap:3px">
+   <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+   <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+  </div>
+  <!-- Конденсаторы справа от BT -->
+  <div style="position:absolute;left:calc(50% + 24px);top:4px;display:flex;gap:3px">
+   <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+   <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+  </div>
+
+  <!-- Мосфеты левый бок -->
+  <div style="position:absolute;left:4px;top:28px;display:flex;flex-direction:column;gap:4px">
+   <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+   <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+  </div>
+  <!-- Мосфеты правый бок -->
+  <div style="position:absolute;right:4px;top:28px;display:flex;flex-direction:column;gap:4px">
+   <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+   <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+  </div>
+
+  <!-- Центральный чип -->
+  <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:36px;height:30px;background:#222;border:1px solid #666;border-radius:2px"></div>
+
+  <!-- Маркер направления -->
+  <div style="position:absolute;bottom:10%;right:12%;font-size:16px;color:#8f8;opacity:.8">&#9654;</div>
+
+ </div>
  </div>
 </div>
-<div id="d_angles">pitch: -- °  roll: -- °</div>
-<div class="dash" style="grid-template-columns:repeat(3,1fr);margin-top:4px">
- <div class="c"><span>ax, g</span><b id="d_ax">-</b></div>
- <div class="c"><span>ay, g</span><b id="d_ay">-</b></div>
- <div class="c"><span>az, g</span><b id="d_az">-</b></div>
- <div class="c"><span>gx, °/s</span><b id="d_gx">-</b></div>
- <div class="c"><span>gy, °/s</span><b id="d_gy">-</b></div>
- <div class="c"><span>gz, °/s</span><b id="d_gz">-</b></div>
-</div>
+<div id="d_angles" style="text-align:center;font:13px monospace;color:#cde;margin-bottom:4px">pitch: -- ° &nbsp; roll: -- °</div>
 <div id="link">Плата сигвея: нет данных</div>
 
 <div class="dash">
@@ -192,7 +197,8 @@ function onLine(s){
   $('d_en').textContent=(st&1?'ВКЛ':'выкл')+(st&16?' 🕹':'')+(err?' E'+(err&255)+'/'+(err>>8):'')+(st&2?' TO':'');
   if(!filled){$('imax').value=Math.round(imax/10);$('nmax').value=nmax;filled=true}
   setLink(true);
- } else if(s.startsWith('#I,')){
+ 
+} else if(s.startsWith('#I,')){
   const v=s.split(',').slice(1).map(Number);
   const [ax,ay,az,gx,gy,gz]=v;
   $('d_ax').textContent=(ax/1000).toFixed(3);
@@ -202,7 +208,7 @@ function onLine(s){
   $('d_gy').textContent=(gy/10).toFixed(1);
   $('d_gz').textContent=(gz/10).toFixed(1);
   drawOrient(ax/1000,ay/1000,az/1000);
- } else if(s.startsWith('#P,'))onPed(s.split(',').slice(1).map(Number));
+} else if(s.startsWith('#P,'))onPed(s.split(',').slice(1).map(Number));
  else if(s.startsWith('#C,'))onCal(s.split(',').slice(1));
  else if(s.startsWith('#A,')){const e=+s.slice(3);log('Плата: '+(ERR[e]||('ошибка '+e))+'\n')}
  else if(s.startsWith('#L,')){setLink(s[3]=='1')}
@@ -254,18 +260,15 @@ let wheelD=parseFloat(localStorage.getItem('wheelD'))||10.5;
 function kmh(rpm){return rpm*Math.PI*wheelD*0.0254*60/1000}
 $('wheeld').value=wheelD;
 $('wheeld').onchange=e=>{const v=parseFloat(e.target.value);if(v>=4&&v<=30){wheelD=v;localStorage.setItem('wheelD',v)}else e.target.value=wheelD};
+
 function drawOrient(ax,ay,az){
- const mag=Math.sqrt(ax*ax+ay*ay+az*az);
- if(mag<0.05)return;
- const nx=ax/mag,ny=ay/mag,nz=az/mag;
- // asin для pitch: нет разрыва при перевороте (диапазон -90..+90)
- const pd=Math.asin(Math.max(-1,Math.min(1,ny)))*180/Math.PI;
- const rd=Math.atan2(-nx,Math.sqrt(ny*ny+nz*nz))*180/Math.PI;
- $('d_angles').textContent='pitch: '+pd.toFixed(1)+'°  roll: '+rd.toFixed(1)+'°';
- $('b3i').style.transform='rotateX('+(38-pd)+'deg) rotateY('+rd+'deg)';
- // задняя сторона: когда плата перевёрнута (nz < 0)
- const bb=$('board_back');
- if(bb)bb.style.display=nz<0?'flex':'none';
+  const pitch = Math.atan2(ay, az);
+  const roll  = Math.atan2(-ax, Math.sqrt(ay*ay + az*az));
+  const pd_deg = pitch*180/Math.PI;
+  const rd_deg = roll *180/Math.PI;
+  $('d_angles').textContent = 'pitch: '+pd_deg.toFixed(1)+' °   roll: '+rd_deg.toFixed(1)+' °';
+  $('board3d_inner').style.transform =
+    'rotateX('+(38-pd_deg)+'deg) rotateY('+(rd_deg)+'deg)';
 }
 function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
