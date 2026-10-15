@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт</title>
+<title>NB-BT пульт v3</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -30,14 +31,14 @@
  #calbox{display:none;background:#432;border-radius:10px;padding:8px;margin-top:8px;font:14px monospace}
  .face{position:absolute;width:200px;border-radius:3px}
  #board3d{perspective:500px;height:220px;display:flex;align-items:center;justify-content:center;margin:6px 0}
- #b3i{width:220px;height:120px;position:relative;transform-style:preserve-3d;transition:transform .1s}
+ #b3i{width:220px;height:120px;position:relative;-webkit-transform-style:preserve-3d;transform-style:preserve-3d;-webkit-transition:transform .1s;transition:transform .1s}
  #board_back{position:absolute;inset:0;background:linear-gradient(160deg,#1a1a2a,#111120);border:2px solid #335;border-radius:5px;display:none;align-items:flex-start;justify-content:center;padding-top:8px}
  #d_angles{text-align:center;font:13px monospace;color:#cde;margin-bottom:4px}
  details{margin-top:12px} summary{font-size:17px;font-weight:bold}
 </style></head><body>
 <button id="con">Подключиться к NB-BT</button>
 <div id="board3d">
- <div style="transform-style:preserve-3d;transform:rotateX(-38deg)">
+ <div style="-webkit-transform-style:preserve-3d;transform-style:preserve-3d;-webkit-transform:rotateX(-38deg);transform:rotateX(-38deg)">
   <div id="b3i">
    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b,#0d3a0d);border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a"></div>
    <div class="face" style="transform:rotateX( 90deg) translateZ(60px);height:14px;top:53px;background:#0c280c;border:1px solid #2a2"></div>
@@ -92,6 +93,7 @@
  <div class="c"><span>gy, °/s</span><b id="d_gy">-</b></div>
  <div class="c"><span>gz, °/s</span><b id="d_gz">-</b></div>
 </div>
+<div style="text-align:center;font:11px monospace;color:#555;margin-top:2px">v3</div>
 <div id="link">Плата сигвея: нет данных</div>
 
 <div class="dash">
@@ -262,7 +264,8 @@ function drawOrient(ax,ay,az){
  const pd=Math.asin(Math.max(-1,Math.min(1,ny)))*180/Math.PI;
  const rd=Math.atan2(-nx,Math.sqrt(ny*ny+nz*nz))*180/Math.PI;
  $('d_angles').textContent='pitch: '+pd.toFixed(1)+'°  roll: '+rd.toFixed(1)+'°';
- $('b3i').style.transform='rotateX('+(38-pd)+'deg) rotateY('+rd+'deg)';
+ const t='rotateX('+(38-pd)+'deg) rotateY('+rd+'deg)';
+ $('b3i').style.webkitTransform=t;$('b3i').style.transform=t;
  // задняя сторона: когда плата перевёрнута (nz < 0)
  const bb=$('board_back');
  if(bb)bb.style.display=nz<0?'flex':'none';
