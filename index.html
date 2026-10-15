@@ -96,6 +96,7 @@
  </div>
  </div>
 </div>
+<button onclick="imuCalDone=false" style="margin:2px auto;display:block;padding:2px 12px;font-size:12px">&#9654; Горизонталь</button>
 <div id="d_angles" style="text-align:center;font:13px monospace;color:#cde;margin-bottom:4px">pitch: -- ° &nbsp; roll: -- °</div>
 <div id="link">Плата сигвея: нет данных</div>
 
@@ -180,6 +181,7 @@ const NUS='6e400001-b5a3-f393-e0a9-e50e24dcca9e',RX='6e400002-b5a3-f393-e0a9-e50
 const TYP=['COM','SIN','FOC'],MOD=['OPEN','VLT','SPD','TRQ'];
 const ERR={0:'OK',1:'неизвестная команда',2:'неизвестный параметр',4:'вне диапазона',5:'нет значения',10:'колёса крутятся',11:'нужен FOC'};
 let rx=null,dev=null,inbuf='',filled=false;
+let imuOffPitch=0,imuOffRoll=0,imuCalDone=false;
 const $=id=>document.getElementById(id);
 const log=t=>{const l=$('log');l.textContent+=t;if(l.textContent.length>6000)l.textContent=l.textContent.slice(-4000);l.scrollTop=1e9};
 function onLine(s){
@@ -264,14 +266,12 @@ $('wheeld').onchange=e=>{const v=parseFloat(e.target.value);if(v>=4&&v<=30){whee
 function drawOrient(ax,ay,az){
   const pitch = Math.atan2(ay, az);
   const roll  = Math.atan2(-ax, Math.sqrt(ay*ay + az*az));
-  const pd = (pitch*180/Math.PI).toFixed(1);
-  const rd = (roll *180/Math.PI).toFixed(1);
-  $('d_angles').textContent = 'pitch: '+pd+' °   roll: '+rd+' °';
-  // CSS 3D: rotateX = pitch (наклон вперёд/назад), rotateZ = roll (крен)
-  const pd_deg = pitch*180/Math.PI;
-  const rd_deg = roll *180/Math.PI;
+  if(!imuCalDone){imuOffPitch=pitch;imuOffRoll=roll;imuCalDone=true;}
+  const pd_deg = (pitch - imuOffPitch)*180/Math.PI;
+  const rd_deg = (roll  - imuOffRoll )*180/Math.PI;
+  $('d_angles').textContent = 'pitch: '+pd_deg.toFixed(1)+' °   roll: '+rd_deg.toFixed(1)+' °';
   $('board3d_inner').style.transform =
-    'rotateX('+(-pd_deg)+'deg) rotateY('+(rd_deg)+'deg)';
+    'rotateX('+(38-pd_deg)+'deg) rotateY('+(rd_deg)+'deg)';
 }
 function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
