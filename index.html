@@ -44,84 +44,53 @@
 <div id="board3d" style="perspective:500px;height:200px;display:flex;align-items:center;justify-content:center;margin:6px 0">
  <div id="board3d_inner" style="width:220px;height:120px;position:relative;transform-style:preserve-3d;transition:transform .1s">
 
-  <!-- ===== PCB основа ===== -->
-  <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b 0%,#0d3a0d 100%);
-    border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a"></div>
+  <!-- PCB основа -->
+  <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b,#0d3a0d);border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a"></div>
 
-  <!-- ===== Боковые грани (translate = половина высоты/ширины) ===== -->
+  <!-- Боковые грани -->
   <div class="face" style="transform:rotateX( 90deg) translateZ(60px);height:14px;top:53px;background:#0c280c;border:1px solid #2a2"></div>
   <div class="face" style="transform:rotateX(-90deg) translateZ(60px);height:14px;top:53px;background:#0c280c;border:1px solid #2a2"></div>
   <div class="face" style="transform:rotateY( 90deg) translateZ(110px);width:14px;left:96px;background:#0c280c;border:1px solid #2a2"></div>
   <div class="face" style="transform:rotateY(-90deg) translateZ(110px);width:14px;left:96px;background:#0c280c;border:1px solid #2a2"></div>
 
-  <!-- ===== Разъём BT (трапеция, сужается к низу) ===== -->
-  <div style="position:absolute;left:50%;top:3px;transform:translateX(-50%);
-    width:0;height:0;
-    border-left:18px solid transparent;
-    border-right:18px solid transparent;
-    border-top:22px solid #555">
-  </div>
-  <!-- кайма разъёма (тело под трапецией) -->
-  <div style="position:absolute;left:50%;top:3px;transform:translateX(-50%);
-    width:28px;height:16px;background:#444;border:1px solid #888;border-radius:1px 1px 0 0">
-    <!-- пины внутри разъёма -->
-    <div style="display:flex;justify-content:space-around;padding:3px 4px">
-      <div style="width:2px;height:8px;background:#ddd"></div>
-      <div style="width:2px;height:8px;background:#ddd"></div>
-      <div style="width:2px;height:8px;background:#ddd"></div>
-      <div style="width:2px;height:8px;background:#ddd"></div>
-    </div>
+  <!-- BT разъём (трапеция) — чистый SVG чтобы не плодить div-баланс -->
+  <div style="position:absolute;left:50%;top:2px;transform:translateX(-50%);width:32px">
+   <svg width="32" height="22" style="display:block">
+    <polygon points="16,0 32,6 26,22 6,22 0,6" fill="#444" stroke="#888" stroke-width="1"/>
+    <line x1="8" y1="6" x2="8" y2="18" stroke="#ddd" stroke-width="2"/>
+    <line x1="14" y1="6" x2="14" y2="18" stroke="#ddd" stroke-width="2"/>
+    <line x1="20" y1="6" x2="20" y2="18" stroke="#ddd" stroke-width="2"/>
+    <line x1="26" y1="6" x2="26" y2="18" stroke="#ddd" stroke-width="2"/>
+   </svg>
   </div>
 
-  <!-- ===== Конденсаторы слева от BT ===== -->
-  <div style="position:absolute;left:50%;top:5px;margin-left:-46px;display:flex;gap:3px">
-    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
-    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+  <!-- Конденсаторы слева от BT -->
+  <div style="position:absolute;left:calc(50% - 48px);top:4px;display:flex;gap:3px">
+   <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+   <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
   </div>
-  <!-- ===== Конденсаторы справа от BT ===== -->
-  <div style="position:absolute;left:50%;top:5px;margin-left:22px;display:flex;gap:3px">
-    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
-    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+  <!-- Конденсаторы справа от BT -->
+  <div style="position:absolute;left:calc(50% + 24px);top:4px;display:flex;gap:3px">
+   <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+   <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
   </div>
 
-  <!-- ===== МОСФЕТЫ левый бок ===== -->
+  <!-- Мосфеты левый бок -->
   <div style="position:absolute;left:4px;top:28px;display:flex;flex-direction:column;gap:4px">
-    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px;
-      box-shadow:1px 1px 2px #0006">
-      <div style="width:4px;height:100%;background:#666;margin:0 auto"></div>
-    </div>
-    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px;
-      box-shadow:1px 1px 2px #0006">
-      <div style="width:4px;height:100%;background:#666;margin:0 auto"></div>
-    </div>
+   <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+   <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
   </div>
-
-  <!-- ===== МОСФЕТЫ правый бок ===== -->
+  <!-- Мосфеты правый бок -->
   <div style="position:absolute;right:4px;top:28px;display:flex;flex-direction:column;gap:4px">
-    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px;
-      box-shadow:-1px 1px 2px #0006">
-      <div style="width:4px;height:100%;background:#666;margin:0 auto"></div>
-    </div>
-    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px;
-      box-shadow:-1px 1px 2px #0006">
-      <div style="width:4px;height:100%;background:#666;margin:0 auto"></div>
-    </div>
+   <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+   <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
   </div>
 
-  <!-- ===== Центральный чип (микроконтроллер) ===== -->
-  <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-    width:36px;height:30px;background:#222;border:1px solid #666;border-radius:2px">
-    <div style="position:absolute;inset:3px;background:#1a1a1a;border:1px solid #444"></div>
-    <div style="position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);
-      width:18px;height:2px;background:#555"></div>
-  </div>
+  <!-- Центральный чип -->
+  <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:36px;height:30px;background:#222;border:1px solid #666;border-radius:2px"></div>
 
-  <!-- ===== Маркер "вперёд" ===== -->
-  <div style="position:absolute;bottom:10%;right:12%;font-size:16px;color:#8f8;opacity:.8">▶</div>
-
-  <!-- разметочные дорожки -->
-  <div style="position:absolute;top:38%;left:22px;right:22px;height:1px;background:#1a4a1a;opacity:.6"></div>
-  <div style="position:absolute;top:62%;left:22px;right:22px;height:1px;background:#1a4a1a;opacity:.6"></div>
+  <!-- Маркер направления -->
+  <div style="position:absolute;bottom:10%;right:12%;font-size:16px;color:#8f8;opacity:.8">&#9654;</div>
 
  </div>
 </div>
