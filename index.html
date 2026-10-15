@@ -41,7 +41,8 @@
  <div class="c"><span>Ускор Y, g</span><b id="d_ay">-</b></div>
  <div class="c"><span>Ускор Z, g</span><b id="d_az">-</b></div>
 </div>
-<div id="board3d" style="perspective:500px;height:200px;display:flex;align-items:center;justify-content:center;margin:6px 0">
+<div id="board3d" style="perspective:500px;height:220px;display:flex;align-items:center;justify-content:center;margin:6px 0">
+ <div style="transform-style:preserve-3d;transform:rotateX(-38deg)">
  <div id="board3d_inner" style="width:220px;height:120px;position:relative;transform-style:preserve-3d;transition:transform .1s">
 
   <!-- PCB основа -->
@@ -92,6 +93,7 @@
   <!-- Маркер направления -->
   <div style="position:absolute;bottom:10%;right:12%;font-size:16px;color:#8f8;opacity:.8">&#9654;</div>
 
+ </div>
  </div>
 </div>
 <div id="d_angles" style="text-align:center;font:13px monospace;color:#cde;margin-bottom:4px">pitch: -- ° &nbsp; roll: -- °</div>
@@ -269,7 +271,7 @@ function drawOrient(ax,ay,az){
   const pd_deg = pitch*180/Math.PI;
   const rd_deg = roll *180/Math.PI;
   $('board3d_inner').style.transform =
-    'rotateX('+(-pd_deg)+'deg) rotateZ('+(-rd_deg)+'deg)';
+    'rotateX('+(-pd_deg)+'deg) rotateY('+(rd_deg)+'deg)';
 }
 function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
