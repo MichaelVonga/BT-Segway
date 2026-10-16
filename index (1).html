@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NB-BT пульт v5 — IMU без скачка на 90°</title>
+<style>
+ body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
+ h3{margin:14px 0 6px}
+ .g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+ .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+ button{padding:14px 4px;font-size:16px;border:0;border-radius:10px;background:#2a6;color:#fff}
+ button.b{background:#c63} button.s{background:#357} button.x{background:#555} button.m{background:#a3c;font-size:18px}
+ #con{width:100%;background:#36c;font-size:18px}
+ .dash{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+ .c{background:#222;border-radius:10px;padding:8px;text-align:center}
+ .c b{display:block;font-size:20px;margin-top:2px}
+ .c span{font-size:12px;color:#aaa}
+ #link{padding:6px;border-radius:8px;text-align:center;margin-top:8px;background:#633}
+ #log{white-space:pre-wrap;background:#000;color:#8f8;height:150px;overflow:auto;font:12px monospace;padding:6px;margin-top:10px;border-radius:8px}
+ input{width:100%;box-sizing:border-box;padding:12px;font-size:16px;border-radius:8px;border:0}
+ .row{display:grid;grid-template-columns:1fr 2fr 1fr 1.3fr;gap:6px;align-items:center;margin-top:6px}
+ #joyw{display:flex;flex-direction:column;align-items:center;margin-top:8px}
+ #joy{width:260px;height:260px;border-radius:50%;background:radial-gradient(#333,#1a1a1a);border:2px solid #555;position:relative;touch-action:none;user-select:none;-webkit-user-select:none}
+ #joy.on{border-color:#2a6}
+ #knob{width:90px;height:90px;border-radius:50%;background:#36c;position:absolute;left:85px;top:85px;pointer-events:none}
+ #joyv{font:14px monospace;margin-top:6px;color:#aaa}
+ #joybtn{width:100%;font-size:18px}
+ input[type=range]{width:100%}
+ .bar{height:14px;background:#333;border-radius:7px;overflow:hidden;margin-top:4px}
+ .bar i{display:block;height:100%;width:0;background:#2a6}
+ #calbox{display:none;background:#432;border-radius:10px;padding:8px;margin-top:8px;font:14px monospace}
+ .face{position:absolute;width:200px;border-radius:3px}
+ #board3d{perspective:500px;height:220px;display:flex;align-items:center;justify-content:center;margin:6px 0}
+ #b3i{width:220px;height:120px;position:relative;-webkit-transform-style:preserve-3d;transform-style:preserve-3d;}
+ #board_back{position:absolute;inset:0;background:linear-gradient(160deg,#1a1a2a,#111120);border:2px solid #335;border-radius:5px;display:flex;align-items:flex-start;justify-content:center;padding-top:8px}
+ #d_angles{text-align:center;font:13px monospace;color:#cde;margin-bottom:4px}
+ details{margin-top:12px} summary{font-size:17px;font-weight:bold}
+
+ .board-front{position:absolute;inset:0;transform:translateZ(7px);-webkit-backface-visibility:hidden;backface-visibility:hidden;transform-style:preserve-3d}
+ #board_back{box-sizing:border-box;transform:translateZ(-7px) rotateY(180deg);-webkit-backface-visibility:hidden;backface-visibility:hidden}
+ #imuStatus{padding:8px;border:1px solid #666;border-radius:8px;font:14px/1.5 monospace;margin-top:8px;overflow-wrap:anywhere}
+ .imu-panel{padding:12px;background:#222;border:1px solid #555;border-radius:10px}
+ .imu-panel label{display:block;margin:12px 0 4px;font-size:14px;line-height:1.5}
+ .imu-panel input[type=checkbox]{width:22px;height:22px;vertical-align:middle}
+ .imu-panel select,.imu-panel textarea{box-sizing:border-box;width:100%;padding:10px;font-size:16px;border-radius:6px}
+ .imu-panel textarea{min-height:84px;font:14px monospace}
+ .imu-panel p{font-size:14px;line-height:1.5;color:#ddd}
+ .imu-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.imu-actions button{padding:12px}
+ #imuRaw{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.5 monospace;color:#bde}
+ #d_angles{font-size:14px;line-height:1.5}
+</style></head><body>
+<button id="con">Подключиться к NB-BT</button>
+<div id="board3d">
+ <div style="-webkit-transform-style:preserve-3d;transform-style:preserve-3d;-webkit-transform:none;transform:none">
+  <div id="b3i">
+   <div class="board-front">
+   <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b,#0d3a0d);border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a"></div>
+   <div style="position:absolute;left:50%;top:2px;transform:translateX(-50%);width:32px">
+    <svg width="32" height="22" style="display:block">
+     <polygon points="16,0 32,6 26,22 6,22 0,6" fill="#444" stroke="#888" stroke-width="1"/>
+     <line x1="8"  y1="6" x2="8"  y2="18" stroke="#ddd" stroke-width="2"/>
+     <line x1="14" y1="6" x2="14" y2="18" stroke="#ddd" stroke-width="2"/>
+     <line x1="20" y1="6" x2="20" y2="18" stroke="#ddd" stroke-width="2"/>
+     <line x1="26" y1="6" x2="26" y2="18" stroke="#ddd" stroke-width="2"/>
+    </svg>
+   </div>
+   <div style="position:absolute;left:calc(50% - 48px);top:4px;display:flex;gap:3px">
+    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+   </div>
+   <div style="position:absolute;left:calc(50% + 24px);top:4px;display:flex;gap:3px">
+    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+   </div>
+   <div style="position:absolute;left:4px;top:28px;display:flex;flex-direction:column;gap:4px">
+    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+   </div>
+   <div style="position:absolute;right:4px;top:28px;display:flex;flex-direction:column;gap:4px">
+    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+   </div>
+   <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:36px;height:30px;background:#222;border:1px solid #666;border-radius:2px"></div>
+
+   <div style="position:absolute;bottom:10%;right:12%;font-size:16px;color:#8f8;opacity:.8">&#9654;</div>
+   </div>
+   <div id="board_back">
+    <svg width="56" height="34" style="display:block">
+     <rect x="1" y="5" width="54" height="27" rx="2" fill="#222" stroke="#888" stroke-width="1.5"/>
+     <rect x="7"  y="10" width="12" height="15" rx="1" fill="#c0a000" stroke="#ffe060" stroke-width="1"/>
+     <rect x="22" y="10" width="12" height="15" rx="1" fill="#c0a000" stroke="#ffe060" stroke-width="1"/>
+     <rect x="37" y="10" width="12" height="15" rx="1" fill="#c0a000" stroke="#ffe060" stroke-width="1"/>
+     <rect x="20" y="0"  width="16" height="6"  rx="1" fill="#555"    stroke="#888" stroke-width="1"/>
+    </svg>
+   </div>
+   <div class="face" style="width:220px;height:14px;left:0;top:53px;background:#174317;transform:rotateX(90deg) translateZ(60px)"></div>
+   <div class="face" style="width:220px;height:14px;left:0;top:53px;background:#174317;transform:rotateX(-90deg) translateZ(60px)"></div>
+   <div class="face" style="width:14px;height:120px;left:103px;top:0;background:#174317;transform:rotateY(90deg) translateZ(110px)"></div>
+   <div class="face" style="width:14px;height:120px;left:103px;top:0;background:#174317;transform:rotateY(-90deg) translateZ(110px)"></div>
+  </div>
+ </div>
+</div>
+<div id="d_angles">pitch: -- °  roll: -- °</div>
+<div class="dash" style="grid-template-columns:repeat(3,1fr);margin-top:4px">
+ <div class="c"><span>ax, g</span><b id="d_ax">-</b></div>
+ <div class="c"><span>ay, g</span><b id="d_ay">-</b></div>
+ <div class="c"><span>az, g</span><b id="d_az">-</b></div>
+ <div class="c"><span>gx, °/s</span><b id="d_gx">-</b></div>
+ <div class="c"><span>gy, °/s</span><b id="d_gy">-</b></div>
+ <div class="c"><span>gz, °/s</span><b id="d_gz">-</b></div>
+</div>
+<div id="imuStatus" role="status">IMU: ожидание строки #I,ax,ay,az,gx,gy,gz</div>
+<details id="imuDetails"><summary>IMU: диагностика и настройки</summary>
+<div class="imu-panel">
+<p>Ожидается текстовая строка <code>#I,ax,ay,az,gx,gy,gz</code> с окончанием LF или CR. Начальные делители взяты из v3, а не подтверждены прошивкой.</p>
+<div id="imuRaw">Последняя строка IMU: —</div>
+<label for="accScale">Единиц пакета на 1 g (делитель акселерометра)</label><input id="accScale" type="number" min="0.001" step="any" value="1000">
+<label for="gyroScale">Единиц пакета на 1 °/с (делитель гироскопа)</label><input id="gyroScale" type="number" min="0.001" step="any" value="10">
+<label for="axisMap">Монтаж: поворот датчика вокруг Z относительно модели</label>
+<select id="axisMap"><option value="0">0°: X вправо, Y к верхнему краю модели</option><option value="90">+90°: X к верхнему краю, Y влево</option><option value="180">180°: X влево, Y к нижнему краю</option><option value="270">270°: X к нижнему краю, Y вправо</option></select>
+<label><input id="fusion" type="checkbox"> Использовать гироскоп (слияние с акселерометром)</label>
+<p>По умолчанию — наклон по акселерометру, без курса. Слияние включайте после проверки масштаба °/с. Без магнитометра курс относительный и будет дрейфовать. После длинной паузы наклон повторно привязывается к акселерометру. Время берётся по приходу строк в браузер, не по тактам IMU.</p>
+<p>Ракурс модели — строго сверху при нулевом наклоне. Ориентация обновляется непрерывно кватернионом. Числа Эйлера pitch/roll могут менять представление у ±90°, но из них больше не строится вращение модели. Без гироскопа поворот вокруг вертикали не измеряется, и сохранённый условный курс зависит от истории наклонов.</p>
+<p>Оси датчика предполагаются правыми, +Z — из лицевой стороны платы. Повороты монтажа выше не исправляют перевёрнутую установку или иной порядок полей.</p>
+<div class="imu-actions"><button id="imuReset" class="s" type="button">Сбросить ориентацию</button><button id="imuDemo" class="x" type="button">Тест 3D без Bluetooth</button></div>
+<label for="imuPaste">Вставить реальные строки из лога (локальная проверка, без отправки плате)</label>
+<textarea id="imuPaste" placeholder="#I,0,0,1000,0,0,0"></textarea>
+<button id="imuParse" class="s" type="button" style="margin-top:8px">Разобрать строки</button>
+<p>Проверяйте с вывешенными колёсами. Тест и разбор строк не посылают команд плате. Остальные органы управления работают как раньше.</p>
+</div></details>
+<div id="link">Плата сигвея: нет данных</div>
+
+<div class="dash">
+ <div class="c"><span>Режим</span><b id="d_mode">-</b></div>
+ <div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div>
+ <div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div>
+ <div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div>
+ <div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div>
+ <div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div>
+ <div class="c"><span>Imax, А</span><b id="d_imax">-</b></div>
+ <div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div>
+ <div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div>
+</div>
+<div class="dash" style="grid-template-columns:2fr 1fr">
+ <div class="c"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div>
+ <div class="c"><span>Диаметр колеса, дюйм</span><input id="wheeld" type="number" min="4" max="30" step="0.1" style="width:100%"></div>
+</div>
+
+<h3>Режим управления</h3>
+<div id="hcm" style="text-align:center;margin-bottom:6px;color:#aaa">Режим: -</div>
+<div class="g3" style="grid-template-columns:1fr 1fr">
+ <button class="m" data-c="HC=1">Hovercar (педали)</button><button class="m" data-c="HC=0">Джойстик</button>
+</div>
+
+<h3>Джойстик</h3>
+<button id="joybtn" class="x">Джойстик: ВЫКЛ</button>
+<div style="margin-top:8px">Макс. мощность: <b id="pwrv">30</b>%<input id="pwr" type="range" min="10" max="100" step="5" value="30"></div>
+<div id="joyw"><div id="joy"><div id="knob"></div></div><div id="joyv">руль 0 · газ 0</div></div>
+
+<h3>Педали (hovercar)</h3>
+<div class="dash" style="grid-template-columns:1fr 1fr">
+ <div class="c"><span>Газ</span><b id="p_thr">-</b><div class="bar"><i id="p_thrb"></i></div><span id="p_thrr"></span></div>
+ <div class="c"><span>Тормоз</span><b id="p_brk">-</b><div class="bar"><i id="p_brkb" style="background:#c63"></i></div><span id="p_brkr"></span></div>
+</div>
+<div id="p_st" style="text-align:center;margin-top:6px;color:#aaa">-</div>
+<div class="g3" style="margin-top:8px">
+ <button class="s" data-c="PED=1">Педали вкл</button><button class="x" data-c="PED=0">Педали выкл</button>
+ <button class="m" data-c="REV">Вперёд/Назад</button>
+</div>
+<div class="g3" style="margin-top:8px">
+ <button class="b" id="calstart" data-c="CAL">Калибровка</button>
+ <button id="calsave" data-c="CALSAVE">Сохранить калибровку</button>
+ <button class="x" data-c="CALCANCEL">Отмена</button>
+</div>
+<button class="x" style="width:100%;margin-top:8px" onclick="if(confirm('Вернуть 1.0–2.5 В по умолчанию?'))send('CALRESET')">Сбросить калибровку (1.0–2.5 В)</button>
+<div id="calbox"></div>
+
+<h3>Управление платой</h3>
+<div class="g" style="grid-template-columns:repeat(5,1fr);margin-top:8px">
+ <button class="x" data-c="MODE=0">COM</button><button class="x" data-c="MODE=1">SIN</button>
+ <button class="x" data-c="MODE=2">VLT</button><button class="x" data-c="MODE=3">SPD</button><button class="x" data-c="MODE=4">TRQ</button>
+</div>
+<div class="row"><button class="s" onclick="step('imax',-1)">−</button><input id="imax" type="number" min="1" max="40" placeholder="Imax, А"><button class="s" onclick="step('imax',1)">+</button><button onclick="setv('IMAX','imax')">Ток</button></div>
+<div class="row"><button class="s" onclick="step('nmax',-50)">−</button><input id="nmax" type="number" min="10" max="2000" placeholder="Nmax"><button class="s" onclick="step('nmax',50)">+</button><button onclick="setv('NMAX','nmax')">Обороты</button></div>
+<div class="g" style="margin-top:6px">
+ <button class="s" onclick="nq(120)">120</button><button class="s" onclick="nq(200)">200</button><button class="s" onclick="nq(300)">300</button><button class="b" onclick="nq(2000)">Макс</button>
+</div>
+<div class="g3" style="margin-top:8px">
+ <button class="x" data-c="FW=0">Ослаб. поля выкл</button><button class="x" data-c="FW=1">Ослаб. поля вкл</button>
+ <button class="b" data-c="SAVE">Сохранить</button>
+</div>
+
+<details><summary>Тест BT-платы (светодиоды, буззер)</summary>
+<div class="g" style="margin-top:8px">
+ <button data-c="L1">L1</button><button data-c="L2">L2</button>
+ <button data-c="L3">L3</button><button data-c="L4">L4</button>
+ <button data-c="LA=1" class="s">Все ВКЛ</button><button data-c="LA=0" class="x">Все ВЫКЛ</button>
+ <button data-c="RUN" class="s">Бегущий</button><button data-c="INV" class="x">Инверсия</button>
+ <button data-c="BEEP" class="b">Пик</button><button data-c="B=1000,400" class="b">1 кГц</button>
+ <button data-c="B=4000,400" class="b">4 кГц</button><button data-c="BOFF" class="x">Тихо</button>
+ <button data-c="BMIR=1" class="s">Буззер платы вкл</button><button data-c="BMIR=0" class="x">Буззер платы выкл</button>
+ <button data-c="FB" class="s">FB текстом</button><button data-c="?" class="s">Статус</button>
+ <button data-c="P15=0" class="s">P15=0</button><button data-c="P15=1" class="x">P15=1</button>
+ <button data-c="P16=0" class="s">P16=0</button><button data-c="P16=1" class="x">P16=1</button>
+</div></details>
+
+<input id="cmd" style="margin-top:10px" placeholder="Команда, Enter (например $SET N_MOT_MAX 500)">
+<div id="log"></div>
+<script>
+const NUS='6e400001-b5a3-f393-e0a9-e50e24dcca9e',RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e',TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+const TYP=['COM','SIN','FOC'],MOD=['OPEN','VLT','SPD','TRQ'];
+const ERR={0:'OK',1:'неизвестная команда',2:'неизвестный параметр',4:'вне диапазона',5:'нет значения',10:'колёса крутятся',11:'нужен FOC'};
+let rx=null,dev=null,inbuf='',filled=false;
+const $=id=>document.getElementById(id);
+const log=t=>{const l=$('log');l.textContent+=t;if(l.textContent.length>6000)l.textContent=l.textContent.slice(-4000);l.scrollTop=1e9};
+function onLine(s){
+ s=s.trim(); if(!s)return;
+ if(s.startsWith('#F,')){
+  const v=s.split(',').slice(1).map(Number);
+  const [typ,mod,imax,nmax,bat,temp,sl,sr,dc,st,err]=v;
+  $('d_mode').textContent=typ==2?'FOC-'+(MOD[mod]||mod):(TYP[typ]||typ);
+  $('d_bat').textContent=(bat/100).toFixed(1);
+  $('d_temp').textContent=(temp/10).toFixed(1);
+  $('d_l').textContent=sl; $('d_r').textContent=sr;
+  $('d_kmh').textContent=kmh(Math.min(Math.abs(sl),Math.abs(sr))).toFixed(1);
+  $('d_dc').textContent=(dc/100).toFixed(2);
+  $('d_imax').textContent=(imax/10).toFixed(1); $('d_nmax').textContent=nmax;
+  $('hcm').textContent='Режим: '+(st&64?'Hovercar (педали)':'Джойстик');
+  $('d_en').textContent=(st&1?'ВКЛ':'выкл')+(st&16?' 🕹':'')+(err?' E'+(err&255)+'/'+(err>>8):'')+(st&2?' TO':'');
+  if(!filled){$('imax').value=Math.round(imax/10);$('nmax').value=nmax;filled=true}
+  setLink(true);
+ } else if(s.startsWith('#I,')){
+  onImuLine(s);
+ } else if(s.startsWith('#P,'))onPed(s.split(',').slice(1).map(Number));
+ else if(s.startsWith('#C,'))onCal(s.split(',').slice(1));
+ else if(s.startsWith('#A,')){const e=+s.slice(3);log('Плата: '+(ERR[e]||('ошибка '+e))+'\n')}
+ else if(s.startsWith('#L,')){setLink(s[3]=='1')}
+ else log(s+'\n');
+}
+const V=r=>(r*3.6/1023).toFixed(2);
+function onPed(v){
+ const [tr,br,thr,brk,flt,rev,on,tmin,tmax,bmin,bmax]=v;
+ $('p_thr').textContent=(flt&1)?'ОБРЫВ':Math.round(thr/10)+'%';
+ $('p_brk').textContent=(flt&2)?'ОБРЫВ':Math.round(brk/10)+'%';
+ $('p_thrb').style.width=thr/10+'%';$('p_brkb').style.width=brk/10+'%';
+ $('p_thrr').textContent=V(tr)+' В ('+V(tmin)+'–'+V(tmax)+')';
+ $('p_brkr').textContent=V(br)+' В ('+V(bmin)+'–'+V(bmax)+')';
+ $('p_st').textContent=(on?'Педали вкл':'Педали выкл')+' · '+(rev?'НАЗАД':'вперёд');
+}
+function onCal(a){
+ const b=$('calbox');
+ if(a[0]=='1'){b.style.display='block';
+  if(a.length>=7){const [tl,th,bl,bh,tn,bn]=a.slice(1).map(Number);
+   b.innerHTML='КАЛИБРОВКА: нажмите оба курка до упора и отпустите<br>Газ: '+V(tn)+' В · мин '+V(tl)+' · макс '+V(th)+'<br>Тормоз: '+V(bn)+' В · мин '+V(bl)+' · макс '+V(bh)}
+  else b.textContent='КАЛИБРОВКА: нажмите оба курка до упора и отпустите';}
+ else if(a[0]=='OK'){b.style.display='none';log('Калибровка сохранена\n')}
+ else if(a[0]=='0'){b.style.display='none';log('Калибровка отменена\n')}
+ else if(a[0]=='ERR'){const e=+a[1];
+  log('Калибровка: '+(e&8?'сначала нажмите «Калибровка»':(e&4?'ошибка записи flash (действует до сброса)':'малый ход'+(e&1?' газа':'')+(e&2?' тормоза':'')+' - нажмите до упора и снова «Сохранить»'))+'\n')}
+}
+function setLink(ok){$('link').textContent=ok?'Плата сигвея: связь есть':'Плата сигвея: нет связи';$('link').style.background=ok?'#263':'#633'}
+async function connect(){
+ try{
+  stopImuDemo(); resetImu(); inbuf=''; imuDiag.bytes=0; imuDiag.lines=0;
+  dev=await navigator.bluetooth.requestDevice({filters:[{services:[NUS]}],optionalServices:[NUS]});
+  dev.addEventListener('gattserverdisconnected',()=>{rx=null;setJoy(false);inbuf='';resetImu();setLink(false);log('[отключено]\n');$('con').textContent='Подключиться к NB-BT';rx=null});
+  const s=await(await dev.gatt.connect()).getPrimaryService(NUS);
+  rx=await s.getCharacteristic(RX);
+  const tx=await s.getCharacteristic(TX);
+  // Register before enabling notifications: the first notification can arrive immediately.
+  tx.addEventListener('characteristicvaluechanged',e=>feedRx(e.target.value));
+  await tx.startNotifications();
+  $('con').textContent='Подключено: '+dev.name;log('[подключено]\n');send('PRAW');
+ }catch(e){log('Ошибка: '+e+'\n')}
+}
+async function send(c){if(!rx){log('Сначала подключитесь\n');return}
+ const d=new TextEncoder().encode(c);
+ for(let i=0;i<d.length;i+=20)await rx.writeValueWithoutResponse(d.slice(i,i+20));}
+function step(id,d){const e=$(id);e.value=Math.max(+e.min,Math.min(+e.max,(+e.value||0)+d))}
+// Скорость: об/мин колеса -> км/ч. Диаметр хранится в браузере (localStorage), по умолчанию 10.5"
+let wheelD=parseFloat(localStorage.getItem('wheelD'))||10.5;
+function kmh(rpm){return rpm*Math.PI*wheelD*0.0254*60/1000}
+$('wheeld').value=wheelD;
+$('wheeld').onchange=e=>{const v=parseFloat(e.target.value);if(v>=4&&v<=30){wheelD=v;localStorage.setItem('wheelD',v)}else e.target.value=wheelD};
+// IMU attitude: q rotates sensor/body coordinates into a Z-up world.
+// CSS uses Y down, so render S*R(q)*S, S=diag(1,-1,1).
+const imuDiag={bytes:0,lines:0,good:0,bad:0,last:0,raw:'',note:''};
+const imu={q:[1,0,0,0],last:0,ready:false};
+let demoTimer=null;
+function qmul(a,b){const [w,x,y,z]=a,[v,i,j,k]=b;return [w*v-x*i-y*j-z*k,w*i+x*v+y*k-z*j,w*j-x*k+y*v+z*i,w*k+x*j-y*i+z*v]}
+function qnorm(q){const n=Math.hypot(...q);return n>1e-12?q.map(x=>x/n):[1,0,0,0]}
+function resetImu(){imu.q=[1,0,0,0];imu.last=0;imu.ready=false;imuDiag.last=0;imuDiag.note='Оценка сброшена; ожидается следующий IMU-пакет';$('b3i').style.transform='none';$('b3i').style.webkitTransform='none';$('d_angles').textContent='pitch: —  roll: —';updateImuStatus()}
+function updateImuStatus(){
+ const age=imuDiag.last?(performance.now()-imuDiag.last)/1000:null;
+ const state=demoTimer?'ТЕСТ 3D — НЕ данные платы':age===null?'нет валидных данных IMU':age>1.5?'IMU: данные устарели':'IMU: данные поступают';
+ $('imuStatus').textContent=state+' · RX '+imuDiag.bytes+' байт / '+imuDiag.lines+' строк · IMU '+imuDiag.good+' / ошибок '+imuDiag.bad+(age===null?'':' · возраст '+age.toFixed(1)+' с')+(imuDiag.note?' · '+imuDiag.note:'');
+ $('imuStatus').style.borderColor=demoTimer?'#deb05e':age!==null&&age<=1.5?'#72bc8f':'#de9255';
+}
+function feedRx(value){
+ imuDiag.bytes+=value.byteLength;
+ // NUS messages here are ASCII. One notification is not necessarily one line.
+ inbuf+=new TextDecoder().decode(value);
+ let m;while((m=inbuf.match(/[\r\n]/))){const i=m.index,line=inbuf.slice(0,i).trim();inbuf=inbuf.slice(i+1);if(line){imuDiag.lines++;onLine(line)}}
+ if(inbuf.length>8192){inbuf='';imuDiag.note='Переполнение RX: нет разделителей CR/LF';log('[RX: сброшен буфер без окончания строки]\n')}
+ updateImuStatus();
+}
+function mapAxes(x,y,z){switch(+$('axisMap').value){case 90:return [-y,x,z];case 180:return [-x,-y,z];case 270:return [y,-x,z];default:return [x,y,z]}}
+function onImuLine(s){
+ imuDiag.raw=s;$('imuRaw').textContent='Последняя строка IMU: '+s;
+ const fields=s.split(',').slice(1);
+ const v=fields.map(Number),as=+$('accScale').value,gs=+$('gyroScale').value;
+ if(fields.length!==6||fields.some(t=>!t.trim())||v.some(n=>!Number.isFinite(n))||!(as>0&&gs>0&&Number.isFinite(as)&&Number.isFinite(gs))){
+  imuDiag.bad++;imuDiag.note='Неверный #I: нужны ровно 6 чисел и положительные делители';updateImuStatus();return;
+ }
+ const [ax,ay,az]=mapAxes(...v.slice(0,3).map(n=>n/as));
+ const [gx,gy,gz]=mapAxes(...v.slice(3,6).map(n=>n/gs));
+ for(const [id,val,dec] of [['ax',ax,3],['ay',ay,3],['az',az,3],['gx',gx,1],['gy',gy,1],['gz',gz,1]])$('d_'+id).textContent=val.toFixed(dec);
+ imuDiag.good++;imuDiag.last=performance.now();
+ const mag=Math.hypot(ax,ay,az);
+ imuDiag.note=mag<0.05?'|a| слишком мало для оценки наклона':Math.abs(mag-1)>0.25?'|a|='+mag.toFixed(2)+' g: движение или неверный масштаб':'|a|='+mag.toFixed(2)+' g';
+ drawOrient(ax,ay,az,gx,gy,gz,imuDiag.last);updateImuStatus();
+}
+function alignGravity(q,ax,ay,az){
+ // Apply the shortest correction to the PREVIOUS attitude. Rebuilding Euler
+ // angles with yaw=0 each sample causes a 180-degree heading jump at pitch=90.
+ // Accelerometer cannot observe heading: preserve the unconstrained twist
+ // locally, rather than impose a discontinuous global Euler convention.
+ const n=Math.hypot(ax,ay,az);if(n<0.05)return q;
+ const a=[0,ax/n,ay/n,az/n];
+ const [w,x,y,z]=q;
+ const world=qmul(qmul(q,a),[w,-x,-y,-z]);
+ // Rotate the measured world-frame up-vector toward [0,0,1].
+ const cx=world[2],cy=-world[1],sn=Math.hypot(cx,cy);
+ const dot=Math.max(-1,Math.min(1,world[3]));
+ let correction;
+ if(sn<1e-10){
+  // An exactly antipodal first sample has no unique tilt axis. Pick world X.
+  correction=dot>=0?[1,0,0,0]:[0,1,0,0];
+ }else{
+  const half=Math.atan2(sn,dot)/2,k=Math.sin(half)/sn;
+  correction=[Math.cos(half),cx*k,cy*k,0];
+ }
+ return qnorm(qmul(correction,q));
+}
+function drawOrient(ax,ay,az,gx=0,gy=0,gz=0,now=performance.now()){
+ const mag=Math.hypot(ax,ay,az),fusion=$('fusion').checked;
+ const dt=imu.last?(now-imu.last)/1000:0;imu.last=now;
+ if(!fusion||!imu.ready||dt>0.5){
+  if(mag<0.05)return;
+  imu.q=alignGravity(imu.ready?imu.q:[1,0,0,0],ax,ay,az);imu.ready=true;
+ }else if(dt>0){
+  let wx=gx*Math.PI/180,wy=gy*Math.PI/180,wz=gz*Math.PI/180;
+  const [w,x,y,z]=imu.q;
+  // Correction only near 1 g: linear acceleration is not a gravity reference.
+  if(mag>=0.75&&mag<=1.25){
+   const a=[ax/mag,ay/mag,az/mag];
+   const g=[2*(x*z-w*y),2*(y*z+w*x),1-2*(x*x+y*y)];
+   const kp=2.5;
+   wx+=kp*(a[1]*g[2]-a[2]*g[1]);wy+=kp*(a[2]*g[0]-a[0]*g[2]);wz+=kp*(a[0]*g[1]-a[1]*g[0]);
+  }
+  // Exact incremental quaternion avoids first-order integration error.
+  const rate=Math.hypot(wx,wy,wz),half=rate*dt/2,k=rate>1e-12?Math.sin(half)/rate:dt/2;
+  imu.q=qnorm(qmul(imu.q,[Math.cos(half),wx*k,wy*k,wz*k]));
+ }
+ renderImu();
+}
+function renderImu(){
+ const [w,x,y,z]=imu.q;
+ const r00=1-2*(y*y+z*z),r01=2*(x*y-w*z),r02=2*(x*z+w*y);
+ const r10=2*(x*y+w*z),r11=1-2*(x*x+z*z),r12=2*(y*z-w*x);
+ const r20=2*(x*z-w*y),r21=2*(y*z+w*x),r22=1-2*(x*x+y*y);
+ const matrix=[r00,-r10,r20,0,-r01,r11,-r21,0,r02,-r12,r22,0,0,0,0,1];
+ const t='matrix3d('+matrix.join(',')+')';$('b3i').style.transform=t;$('b3i').style.webkitTransform=t;
+ const deg=180/Math.PI,roll=Math.atan2(r21,r22)*deg,pitch=Math.asin(Math.max(-1,Math.min(1,-r20)))*deg,yaw=Math.atan2(r10,r00)*deg;
+ $('d_angles').textContent='pitch: '+pitch.toFixed(1)+'° · roll: '+roll.toFixed(1)+'° · '+($('fusion').checked?'yaw (отн.): '+yaw.toFixed(1)+'°':'yaw: не определяется');
+}
+function stopImuDemo(){
+ if(!demoTimer)return;clearInterval(demoTimer);demoTimer=null;$('imuDemo').textContent='Тест 3D без Bluetooth';resetImu();
+}
+$('imuReset').onclick=resetImu;
+for(const id of ['accScale','gyroScale','axisMap','fusion'])$(id).onchange=()=>{stopImuDemo();resetImu()};
+$('imuDemo').onclick=()=>{
+ if(demoTimer){stopImuDemo();return}
+ if(dev?.gatt?.connected||rx){log('Тест 3D доступен только без Bluetooth-подключения\n');return}
+ resetImu();const start=performance.now();$('imuDemo').textContent='Остановить тест 3D';
+ demoTimer=setInterval(()=>{
+  // A local visual check, NOT injected into telemetry counters or sent to BLE.
+  const t=(performance.now()-start)/1000;
+  imu.q=qnorm(qmul([Math.cos(t*0.35),0,0,Math.sin(t*0.35)],qmul([Math.cos(t*0.5),Math.sin(t*0.5),0,0],[Math.cos(0.3*Math.sin(t)),0,Math.sin(0.3*Math.sin(t)),0])));
+  renderImu();$('d_angles').textContent='ТЕСТ 3D — синтетическое вращение, не телеметрия';updateImuStatus();
+ },33);
+};
+$('imuParse').onclick=()=>{
+ if(dev?.gatt?.connected||rx){log('Локальный разбор доступен только без Bluetooth-подключения\n');return}
+ stopImuDemo();resetImu();
+ const lines=$('imuPaste').value.split(/[\r\n]+/).map(s=>s.trim()).filter(Boolean);
+ for(const line of lines){if(line.startsWith('#I,'))onImuLine(line);else log('[Локальный разбор: ожидается #I,...] '+line+'\n')}
+ imuDiag.note+=' · локальный разбор, не живые данные';updateImuStatus();
+};
+setInterval(updateImuStatus,500);
+
+function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
+function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
+
+// ---------- Джойстик ----------
+let joyOn=false,jx=0,jy=0,joyBusy=false,joyTimer=null;
+const joy=$('joy'),knob=$('knob');
+$('pwr').oninput=e=>$('pwrv').textContent=e.target.value;
+function joyPos(e){
+ const r=joy.getBoundingClientRect(),R=r.width/2;
+ let x=(e.clientX-r.left-R)/R,y=(e.clientY-r.top-R)/R;
+ const d=Math.hypot(x,y);if(d>1){x/=d;y/=d}
+ jx=x;jy=y;drawKnob();
+}
+function drawKnob(){
+ const R=joy.clientWidth/2,k=knob.clientWidth/2;
+ knob.style.left=(R-k+jx*(R-k))+'px';knob.style.top=(R-k+jy*(R-k))+'px';
+}
+joy.addEventListener('pointerdown',e=>{joy.setPointerCapture(e.pointerId);joyPos(e)});
+joy.addEventListener('pointermove',e=>{if(joy.hasPointerCapture(e.pointerId))joyPos(e)});
+const release=()=>{jx=0;jy=0;drawKnob()};
+joy.addEventListener('pointerup',release);joy.addEventListener('pointercancel',release);joy.addEventListener('lostpointercapture',release);
+function joyVals(){
+ const k=+$('pwr').value*10,dz=v=>Math.abs(v)<0.06?0:v;
+ return [Math.round(dz(jx)*k),Math.round(-dz(jy)*k)];   // руль, газ
+}
+async function joyTick(){
+ const [st,sp]=joyVals();
+ $('joyv').textContent='руль '+st+' · газ '+sp;
+ if(!rx||joyBusy)return;
+ joyBusy=true;
+ try{await rx.writeValueWithoutResponse(new TextEncoder().encode('J,'+st+','+sp))}catch(e){}
+ joyBusy=false;
+}
+function setJoy(on){
+ joyOn=on;release();
+ $('joybtn').textContent='Джойстик: '+(on?'ВКЛ':'ВЫКЛ');$('joybtn').className=on?'':'x';
+ joy.classList.toggle('on',on);
+ clearInterval(joyTimer);
+ if(on)joyTimer=setInterval(joyTick,50);   // 20 раз в секунду; перестанет слать - плата остановится через 0,3 с
+ else{jx=jy=0;joyTick()}
+}
+$('joybtn').onclick=()=>setJoy(!joyOn);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&joyOn)setJoy(false)});
+$('con').onclick=connect;
+document.querySelectorAll('button[data-c]').forEach(b=>b.onclick=()=>send(b.dataset.c));
+$('cmd').onkeydown=e=>{if(e.key==='Enter'){send(e.target.value);e.target.value=''}};
+if(!navigator.bluetooth)log('Web Bluetooth недоступен: откройте в Bluefy (iPhone) или Chrome (Android)\n');
+</script></body></html>
