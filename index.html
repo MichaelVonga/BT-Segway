@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт v3</title>
+<title>NB-BT пульт v4 — IMU</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -31,20 +31,30 @@
  #calbox{display:none;background:#432;border-radius:10px;padding:8px;margin-top:8px;font:14px monospace}
  .face{position:absolute;width:200px;border-radius:3px}
  #board3d{perspective:500px;height:220px;display:flex;align-items:center;justify-content:center;margin:6px 0}
- #b3i{width:220px;height:120px;position:relative;-webkit-transform-style:preserve-3d;transform-style:preserve-3d;-webkit-transition:transform .1s;transition:transform .1s}
- #board_back{position:absolute;inset:0;background:linear-gradient(160deg,#1a1a2a,#111120);border:2px solid #335;border-radius:5px;display:none;align-items:flex-start;justify-content:center;padding-top:8px}
+ #b3i{width:220px;height:120px;position:relative;-webkit-transform-style:preserve-3d;transform-style:preserve-3d;}
+ #board_back{position:absolute;inset:0;background:linear-gradient(160deg,#1a1a2a,#111120);border:2px solid #335;border-radius:5px;display:flex;align-items:flex-start;justify-content:center;padding-top:8px}
  #d_angles{text-align:center;font:13px monospace;color:#cde;margin-bottom:4px}
  details{margin-top:12px} summary{font-size:17px;font-weight:bold}
+
+ .board-front{position:absolute;inset:0;transform:translateZ(7px);-webkit-backface-visibility:hidden;backface-visibility:hidden;transform-style:preserve-3d}
+ #board_back{box-sizing:border-box;transform:translateZ(-7px) rotateY(180deg);-webkit-backface-visibility:hidden;backface-visibility:hidden}
+ #imuStatus{padding:8px;border:1px solid #666;border-radius:8px;font:14px/1.5 monospace;margin-top:8px;overflow-wrap:anywhere}
+ .imu-panel{padding:12px;background:#222;border:1px solid #555;border-radius:10px}
+ .imu-panel label{display:block;margin:12px 0 4px;font-size:14px;line-height:1.5}
+ .imu-panel input[type=checkbox]{width:22px;height:22px;vertical-align:middle}
+ .imu-panel select,.imu-panel textarea{box-sizing:border-box;width:100%;padding:10px;font-size:16px;border-radius:6px}
+ .imu-panel textarea{min-height:84px;font:14px monospace}
+ .imu-panel p{font-size:14px;line-height:1.5;color:#ddd}
+ .imu-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.imu-actions button{padding:12px}
+ #imuRaw{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.5 monospace;color:#bde}
+ #d_angles{font-size:14px;line-height:1.5}
 </style></head><body>
 <button id="con">Подключиться к NB-BT</button>
 <div id="board3d">
  <div style="-webkit-transform-style:preserve-3d;transform-style:preserve-3d;-webkit-transform:rotateX(-38deg);transform:rotateX(-38deg)">
   <div id="b3i">
+   <div class="board-front">
    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b,#0d3a0d);border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a"></div>
-   <div class="face" style="transform:rotateX( 90deg) translateZ(60px);height:14px;top:53px;background:#0c280c;border:1px solid #2a2"></div>
-   <div class="face" style="transform:rotateX(-90deg) translateZ(60px);height:14px;top:53px;background:#0c280c;border:1px solid #2a2"></div>
-   <div class="face" style="transform:rotateY( 90deg) translateZ(110px);width:14px;left:96px;background:#0c280c;border:1px solid #2a2"></div>
-   <div class="face" style="transform:rotateY(-90deg) translateZ(110px);width:14px;left:96px;background:#0c280c;border:1px solid #2a2"></div>
    <div style="position:absolute;left:50%;top:2px;transform:translateX(-50%);width:32px">
     <svg width="32" height="22" style="display:block">
      <polygon points="16,0 32,6 26,22 6,22 0,6" fill="#444" stroke="#888" stroke-width="1"/>
@@ -71,6 +81,9 @@
     <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
    </div>
    <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:36px;height:30px;background:#222;border:1px solid #666;border-radius:2px"></div>
+
+   <div style="position:absolute;bottom:10%;right:12%;font-size:16px;color:#8f8;opacity:.8">&#9654;</div>
+   </div>
    <div id="board_back">
     <svg width="56" height="34" style="display:block">
      <rect x="1" y="5" width="54" height="27" rx="2" fill="#222" stroke="#888" stroke-width="1.5"/>
@@ -80,7 +93,10 @@
      <rect x="20" y="0"  width="16" height="6"  rx="1" fill="#555"    stroke="#888" stroke-width="1"/>
     </svg>
    </div>
-   <div style="position:absolute;bottom:10%;right:12%;font-size:16px;color:#8f8;opacity:.8">&#9654;</div>
+   <div class="face" style="width:220px;height:14px;left:0;top:53px;background:#174317;transform:rotateX(90deg) translateZ(60px)"></div>
+   <div class="face" style="width:220px;height:14px;left:0;top:53px;background:#174317;transform:rotateX(-90deg) translateZ(60px)"></div>
+   <div class="face" style="width:14px;height:120px;left:103px;top:0;background:#174317;transform:rotateY(90deg) translateZ(110px)"></div>
+   <div class="face" style="width:14px;height:120px;left:103px;top:0;background:#174317;transform:rotateY(-90deg) translateZ(110px)"></div>
   </div>
  </div>
 </div>
@@ -93,7 +109,24 @@
  <div class="c"><span>gy, °/s</span><b id="d_gy">-</b></div>
  <div class="c"><span>gz, °/s</span><b id="d_gz">-</b></div>
 </div>
-<div style="text-align:center;font:11px monospace;color:#555;margin-top:2px">v3</div>
+<div id="imuStatus" role="status">IMU: ожидание строки #I,ax,ay,az,gx,gy,gz</div>
+<details id="imuDetails"><summary>IMU: диагностика и настройки</summary>
+<div class="imu-panel">
+<p>Ожидается текстовая строка <code>#I,ax,ay,az,gx,gy,gz</code> с окончанием LF или CR. Начальные делители взяты из v3, а не подтверждены прошивкой.</p>
+<div id="imuRaw">Последняя строка IMU: —</div>
+<label for="accScale">Единиц пакета на 1 g (делитель акселерометра)</label><input id="accScale" type="number" min="0.001" step="any" value="1000">
+<label for="gyroScale">Единиц пакета на 1 °/с (делитель гироскопа)</label><input id="gyroScale" type="number" min="0.001" step="any" value="10">
+<label for="axisMap">Монтаж: поворот датчика вокруг Z относительно модели</label>
+<select id="axisMap"><option value="0">0°: X вправо, Y к верхнему краю модели</option><option value="90">+90°: X к верхнему краю, Y влево</option><option value="180">180°: X влево, Y к нижнему краю</option><option value="270">270°: X к нижнему краю, Y вправо</option></select>
+<label><input id="fusion" type="checkbox"> Использовать гироскоп (слияние с акселерометром)</label>
+<p>По умолчанию — наклон по акселерометру, без курса. Слияние включайте после проверки масштаба °/с. Без магнитометра курс относительный и будет дрейфовать. Длинные паузы приёма сбрасывают оценку. Время берётся по приходу строк в браузер, не по тактам IMU.</p>
+<p>Оси датчика предполагаются правыми, +Z — из лицевой стороны платы. Повороты монтажа выше не исправляют перевёрнутую установку или иной порядок полей.</p>
+<div class="imu-actions"><button id="imuReset" class="s" type="button">Сбросить ориентацию</button><button id="imuDemo" class="x" type="button">Тест 3D без Bluetooth</button></div>
+<label for="imuPaste">Вставить реальные строки из лога (локальная проверка, без отправки плате)</label>
+<textarea id="imuPaste" placeholder="#I,0,0,1000,0,0,0"></textarea>
+<button id="imuParse" class="s" type="button" style="margin-top:8px">Разобрать строки</button>
+<p>Проверяйте с вывешенными колёсами. Тест и разбор строк не посылают команд плате. Остальные органы управления работают как раньше.</p>
+</div></details>
 <div id="link">Плата сигвея: нет данных</div>
 
 <div class="dash">
@@ -180,6 +213,7 @@ let rx=null,dev=null,inbuf='',filled=false;
 const $=id=>document.getElementById(id);
 const log=t=>{const l=$('log');l.textContent+=t;if(l.textContent.length>6000)l.textContent=l.textContent.slice(-4000);l.scrollTop=1e9};
 function onLine(s){
+ s=s.trim(); if(!s)return;
  if(s.startsWith('#F,')){
   const v=s.split(',').slice(1).map(Number);
   const [typ,mod,imax,nmax,bat,temp,sl,sr,dc,st,err]=v;
@@ -195,15 +229,7 @@ function onLine(s){
   if(!filled){$('imax').value=Math.round(imax/10);$('nmax').value=nmax;filled=true}
   setLink(true);
  } else if(s.startsWith('#I,')){
-  const v=s.split(',').slice(1).map(Number);
-  const [ax,ay,az,gx,gy,gz]=v;
-  $('d_ax').textContent=(ax/1000).toFixed(3);
-  $('d_ay').textContent=(ay/1000).toFixed(3);
-  $('d_az').textContent=(az/1000).toFixed(3);
-  $('d_gx').textContent=(gx/10).toFixed(1);
-  $('d_gy').textContent=(gy/10).toFixed(1);
-  $('d_gz').textContent=(gz/10).toFixed(1);
-  drawOrient(ax/1000,ay/1000,az/1000);
+  onImuLine(s);
  } else if(s.startsWith('#P,'))onPed(s.split(',').slice(1).map(Number));
  else if(s.startsWith('#C,'))onCal(s.split(',').slice(1));
  else if(s.startsWith('#A,')){const e=+s.slice(3);log('Плата: '+(ERR[e]||('ошибка '+e))+'\n')}
@@ -234,16 +260,15 @@ function onCal(a){
 function setLink(ok){$('link').textContent=ok?'Плата сигвея: связь есть':'Плата сигвея: нет связи';$('link').style.background=ok?'#263':'#633'}
 async function connect(){
  try{
+  stopImuDemo(); resetImu(); inbuf=''; imuDiag.bytes=0; imuDiag.lines=0;
   dev=await navigator.bluetooth.requestDevice({filters:[{services:[NUS]}],optionalServices:[NUS]});
-  dev.addEventListener('gattserverdisconnected',()=>{setJoy(false);log('[отключено]\n');$('con').textContent='Подключиться к NB-BT';rx=null});
+  dev.addEventListener('gattserverdisconnected',()=>{rx=null;setJoy(false);inbuf='';resetImu();setLink(false);log('[отключено]\n');$('con').textContent='Подключиться к NB-BT';rx=null});
   const s=await(await dev.gatt.connect()).getPrimaryService(NUS);
   rx=await s.getCharacteristic(RX);
   const tx=await s.getCharacteristic(TX);
+  // Register before enabling notifications: the first notification can arrive immediately.
+  tx.addEventListener('characteristicvaluechanged',e=>feedRx(e.target.value));
   await tx.startNotifications();
-  tx.addEventListener('characteristicvaluechanged',e=>{
-   inbuf+=new TextDecoder().decode(e.target.value);
-   let i;while((i=inbuf.indexOf('\n'))>=0){onLine(inbuf.slice(0,i));inbuf=inbuf.slice(i+1)}
-  });
   $('con').textContent='Подключено: '+dev.name;log('[подключено]\n');send('PRAW');
  }catch(e){log('Ошибка: '+e+'\n')}
 }
@@ -256,20 +281,106 @@ let wheelD=parseFloat(localStorage.getItem('wheelD'))||10.5;
 function kmh(rpm){return rpm*Math.PI*wheelD*0.0254*60/1000}
 $('wheeld').value=wheelD;
 $('wheeld').onchange=e=>{const v=parseFloat(e.target.value);if(v>=4&&v<=30){wheelD=v;localStorage.setItem('wheelD',v)}else e.target.value=wheelD};
-function drawOrient(ax,ay,az){
- const mag=Math.sqrt(ax*ax+ay*ay+az*az);
- if(mag<0.05)return;
- const nx=ax/mag,ny=ay/mag,nz=az/mag;
- // asin для pitch: нет разрыва при перевороте (диапазон -90..+90)
- const pd=Math.asin(Math.max(-1,Math.min(1,ny)))*180/Math.PI;
- const rd=Math.atan2(-nx,Math.sqrt(ny*ny+nz*nz))*180/Math.PI;
- $('d_angles').textContent='pitch: '+pd.toFixed(1)+'°  roll: '+rd.toFixed(1)+'°';
- const t='rotateX('+(38-pd)+'deg) rotateY('+rd+'deg)';
- $('b3i').style.webkitTransform=t;$('b3i').style.transform=t;
- // задняя сторона: когда плата перевёрнута (nz < 0)
- const bb=$('board_back');
- if(bb)bb.style.display=nz<0?'flex':'none';
+// IMU attitude: q rotates sensor/body coordinates into a Z-up world.
+// CSS uses Y down, so render S*R(q)*S, S=diag(1,-1,1).
+const imuDiag={bytes:0,lines:0,good:0,bad:0,last:0,raw:'',note:''};
+const imu={q:[1,0,0,0],last:0,ready:false};
+let demoTimer=null;
+function qmul(a,b){const [w,x,y,z]=a,[v,i,j,k]=b;return [w*v-x*i-y*j-z*k,w*i+x*v+y*k-z*j,w*j-x*k+y*v+z*i,w*k+x*j-y*i+z*v]}
+function qnorm(q){const n=Math.hypot(...q);return n>1e-12?q.map(x=>x/n):[1,0,0,0]}
+function resetImu(){imu.q=[1,0,0,0];imu.last=0;imu.ready=false;imuDiag.last=0;imuDiag.note='Оценка сброшена; ожидается следующий IMU-пакет';$('b3i').style.transform='none';$('b3i').style.webkitTransform='none';$('d_angles').textContent='pitch: —  roll: —';updateImuStatus()}
+function updateImuStatus(){
+ const age=imuDiag.last?(performance.now()-imuDiag.last)/1000:null;
+ const state=demoTimer?'ТЕСТ 3D — НЕ данные платы':age===null?'нет валидных данных IMU':age>1.5?'IMU: данные устарели':'IMU: данные поступают';
+ $('imuStatus').textContent=state+' · RX '+imuDiag.bytes+' байт / '+imuDiag.lines+' строк · IMU '+imuDiag.good+' / ошибок '+imuDiag.bad+(age===null?'':' · возраст '+age.toFixed(1)+' с')+(imuDiag.note?' · '+imuDiag.note:'');
+ $('imuStatus').style.borderColor=demoTimer?'#deb05e':age!==null&&age<=1.5?'#72bc8f':'#de9255';
 }
+function feedRx(value){
+ imuDiag.bytes+=value.byteLength;
+ // NUS messages here are ASCII. One notification is not necessarily one line.
+ inbuf+=new TextDecoder().decode(value);
+ let m;while((m=inbuf.match(/[\r\n]/))){const i=m.index,line=inbuf.slice(0,i).trim();inbuf=inbuf.slice(i+1);if(line){imuDiag.lines++;onLine(line)}}
+ if(inbuf.length>8192){inbuf='';imuDiag.note='Переполнение RX: нет разделителей CR/LF';log('[RX: сброшен буфер без окончания строки]\n')}
+ updateImuStatus();
+}
+function mapAxes(x,y,z){switch(+$('axisMap').value){case 90:return [-y,x,z];case 180:return [-x,-y,z];case 270:return [y,-x,z];default:return [x,y,z]}}
+function onImuLine(s){
+ imuDiag.raw=s;$('imuRaw').textContent='Последняя строка IMU: '+s;
+ const fields=s.split(',').slice(1);
+ const v=fields.map(Number),as=+$('accScale').value,gs=+$('gyroScale').value;
+ if(fields.length!==6||fields.some(t=>!t.trim())||v.some(n=>!Number.isFinite(n))||!(as>0&&gs>0&&Number.isFinite(as)&&Number.isFinite(gs))){
+  imuDiag.bad++;imuDiag.note='Неверный #I: нужны ровно 6 чисел и положительные делители';updateImuStatus();return;
+ }
+ const [ax,ay,az]=mapAxes(...v.slice(0,3).map(n=>n/as));
+ const [gx,gy,gz]=mapAxes(...v.slice(3,6).map(n=>n/gs));
+ for(const [id,val,dec] of [['ax',ax,3],['ay',ay,3],['az',az,3],['gx',gx,1],['gy',gy,1],['gz',gz,1]])$('d_'+id).textContent=val.toFixed(dec);
+ imuDiag.good++;imuDiag.last=performance.now();
+ const mag=Math.hypot(ax,ay,az);
+ imuDiag.note=mag<0.05?'|a| слишком мало для оценки наклона':Math.abs(mag-1)>0.25?'|a|='+mag.toFixed(2)+' g: движение или неверный масштаб':'|a|='+mag.toFixed(2)+' g';
+ drawOrient(ax,ay,az,gx,gy,gz,imuDiag.last);updateImuStatus();
+}
+function tiltQuaternion(ax,ay,az){
+ const roll=Math.atan2(ay,az),pitch=Math.atan2(-ax,Math.hypot(ay,az));
+ const cr=Math.cos(roll/2),sr=Math.sin(roll/2),cp=Math.cos(pitch/2),sp=Math.sin(pitch/2);
+ return [cr*cp,sr*cp,cr*sp,-sr*sp]; // yaw = 0; no heading observable from gravity.
+}
+function drawOrient(ax,ay,az,gx=0,gy=0,gz=0,now=performance.now()){
+ const mag=Math.hypot(ax,ay,az),fusion=$('fusion').checked;
+ const dt=imu.last?(now-imu.last)/1000:0;imu.last=now;
+ if(!fusion||!imu.ready||dt>0.5){
+  if(mag<0.05)return;
+  imu.q=tiltQuaternion(ax,ay,az);imu.ready=true;
+ }else if(dt>0){
+  let wx=gx*Math.PI/180,wy=gy*Math.PI/180,wz=gz*Math.PI/180;
+  const [w,x,y,z]=imu.q;
+  // Correction only near 1 g: linear acceleration is not a gravity reference.
+  if(mag>=0.75&&mag<=1.25){
+   const a=[ax/mag,ay/mag,az/mag];
+   const g=[2*(x*z-w*y),2*(y*z+w*x),1-2*(x*x+y*y)];
+   const kp=2.5;
+   wx+=kp*(a[1]*g[2]-a[2]*g[1]);wy+=kp*(a[2]*g[0]-a[0]*g[2]);wz+=kp*(a[0]*g[1]-a[1]*g[0]);
+  }
+  // Exact incremental quaternion avoids first-order integration error.
+  const rate=Math.hypot(wx,wy,wz),half=rate*dt/2,k=rate>1e-12?Math.sin(half)/rate:dt/2;
+  imu.q=qnorm(qmul(imu.q,[Math.cos(half),wx*k,wy*k,wz*k]));
+ }
+ renderImu();
+}
+function renderImu(){
+ const [w,x,y,z]=imu.q;
+ const r00=1-2*(y*y+z*z),r01=2*(x*y-w*z),r02=2*(x*z+w*y);
+ const r10=2*(x*y+w*z),r11=1-2*(x*x+z*z),r12=2*(y*z-w*x);
+ const r20=2*(x*z-w*y),r21=2*(y*z+w*x),r22=1-2*(x*x+y*y);
+ const matrix=[r00,-r10,r20,0,-r01,r11,-r21,0,r02,-r12,r22,0,0,0,0,1];
+ const t='matrix3d('+matrix.join(',')+')';$('b3i').style.transform=t;$('b3i').style.webkitTransform=t;
+ const deg=180/Math.PI,roll=Math.atan2(r21,r22)*deg,pitch=Math.asin(Math.max(-1,Math.min(1,-r20)))*deg,yaw=Math.atan2(r10,r00)*deg;
+ $('d_angles').textContent='pitch: '+pitch.toFixed(1)+'° · roll: '+roll.toFixed(1)+'° · '+($('fusion').checked?'yaw (отн.): '+yaw.toFixed(1)+'°':'yaw: не определяется');
+}
+function stopImuDemo(){
+ if(!demoTimer)return;clearInterval(demoTimer);demoTimer=null;$('imuDemo').textContent='Тест 3D без Bluetooth';resetImu();
+}
+$('imuReset').onclick=resetImu;
+for(const id of ['accScale','gyroScale','axisMap','fusion'])$(id).onchange=()=>{stopImuDemo();resetImu()};
+$('imuDemo').onclick=()=>{
+ if(demoTimer){stopImuDemo();return}
+ if(dev?.gatt?.connected||rx){log('Тест 3D доступен только без Bluetooth-подключения\n');return}
+ resetImu();const start=performance.now();$('imuDemo').textContent='Остановить тест 3D';
+ demoTimer=setInterval(()=>{
+  // A local visual check, NOT injected into telemetry counters or sent to BLE.
+  const t=(performance.now()-start)/1000;
+  imu.q=qnorm(qmul([Math.cos(t*0.35),0,0,Math.sin(t*0.35)],qmul([Math.cos(t*0.5),Math.sin(t*0.5),0,0],[Math.cos(0.3*Math.sin(t)),0,Math.sin(0.3*Math.sin(t)),0])));
+  renderImu();$('d_angles').textContent='ТЕСТ 3D — синтетическое вращение, не телеметрия';updateImuStatus();
+ },33);
+};
+$('imuParse').onclick=()=>{
+ if(dev?.gatt?.connected||rx){log('Локальный разбор доступен только без Bluetooth-подключения\n');return}
+ stopImuDemo();resetImu();
+ const lines=$('imuPaste').value.split(/[\r\n]+/).map(s=>s.trim()).filter(Boolean);
+ for(const line of lines){if(line.startsWith('#I,'))onImuLine(line);else log('[Локальный разбор: ожидается #I,...] '+line+'\n')}
+ imuDiag.note+=' · локальный разбор, не живые данные';updateImuStatus();
+};
+setInterval(updateImuStatus,500);
+
 function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
 
