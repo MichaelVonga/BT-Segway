@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт v10 — ориентация на STM32</title>
+<title>NB-BT пульт v10.1 — ориентация на STM32</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -331,7 +331,9 @@ function syncImuStatus(){
  if(imu.flags&16)text+=' · предел скорости гироскопа';
  if(imu.flags&32)text+=' · пропуск измерений, возможна ошибка курса';
  $('imuMode').textContent='IMU: '+text;
- $('gyroZeroStatus').textContent=imu.flags&8?'Калибровка на плате: ожидаются стабильные измерения.':imu.flags&4?'Ноль гироскопа откалиброван на STM32.':'Ожидание калибровки на STM32.';
+ const reasons=['набираются стабильные измерения','паузы между измерениями больше 30 мс','ускорение вне 0.85–1.15 g','угловая скорость больше 10°/с','меняются показания акселерометра','нестабильные показания гироскопа'];
+ const reason=(imu.flags>>6)&7;
+ $('gyroZeroStatus').textContent=imu.flags&8?'Калибровка на плате: '+(reasons[reason]||'ожидание измерений')+'.':imu.flags&4?'Ноль гироскопа откалиброван на STM32.':'Ожидание калибровки на STM32.';
 }
 function renderImu(){
  const [w,x,y,z]=imu.q;
