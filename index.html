@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт v4 — IMU</title>
+<title>NB-BT пульт v5 — IMU без скачка на 90°</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -51,7 +51,7 @@
 </style></head><body>
 <button id="con">Подключиться к NB-BT</button>
 <div id="board3d">
- <div style="-webkit-transform-style:preserve-3d;transform-style:preserve-3d;-webkit-transform:rotateX(-38deg);transform:rotateX(-38deg)">
+ <div style="-webkit-transform-style:preserve-3d;transform-style:preserve-3d;-webkit-transform:none;transform:none">
   <div id="b3i">
    <div class="board-front">
    <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b,#0d3a0d);border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a"></div>
@@ -119,7 +119,8 @@
 <label for="axisMap">Монтаж: поворот датчика вокруг Z относительно модели</label>
 <select id="axisMap"><option value="0">0°: X вправо, Y к верхнему краю модели</option><option value="90">+90°: X к верхнему краю, Y влево</option><option value="180">180°: X влево, Y к нижнему краю</option><option value="270">270°: X к нижнему краю, Y вправо</option></select>
 <label><input id="fusion" type="checkbox"> Использовать гироскоп (слияние с акселерометром)</label>
-<p>По умолчанию — наклон по акселерометру, без курса. Слияние включайте после проверки масштаба °/с. Без магнитометра курс относительный и будет дрейфовать. Длинные паузы приёма сбрасывают оценку. Время берётся по приходу строк в браузер, не по тактам IMU.</p>
+<p>По умолчанию — наклон по акселерометру, без курса. Слияние включайте после проверки масштаба °/с. Без магнитометра курс относительный и будет дрейфовать. После длинной паузы наклон повторно привязывается к акселерометру. Время берётся по приходу строк в браузер, не по тактам IMU.</p>
+<p>Ракурс модели — строго сверху при нулевом наклоне. Ориентация обновляется непрерывно кватернионом. Числа Эйлера pitch/roll могут менять представление у ±90°, но из них больше не строится вращение модели. Без гироскопа поворот вокруг вертикали не измеряется, и сохранённый условный курс зависит от истории наклонов.</p>
 <p>Оси датчика предполагаются правыми, +Z — из лицевой стороны платы. Повороты монтажа выше не исправляют перевёрнутую установку или иной порядок полей.</p>
 <div class="imu-actions"><button id="imuReset" class="s" type="button">Сбросить ориентацию</button><button id="imuDemo" class="x" type="button">Тест 3D без Bluetooth</button></div>
 <label for="imuPaste">Вставить реальные строки из лога (локальная проверка, без отправки плате)</label>
@@ -319,17 +320,34 @@ function onImuLine(s){
  imuDiag.note=mag<0.05?'|a| слишком мало для оценки наклона':Math.abs(mag-1)>0.25?'|a|='+mag.toFixed(2)+' g: движение или неверный масштаб':'|a|='+mag.toFixed(2)+' g';
  drawOrient(ax,ay,az,gx,gy,gz,imuDiag.last);updateImuStatus();
 }
-function tiltQuaternion(ax,ay,az){
- const roll=Math.atan2(ay,az),pitch=Math.atan2(-ax,Math.hypot(ay,az));
- const cr=Math.cos(roll/2),sr=Math.sin(roll/2),cp=Math.cos(pitch/2),sp=Math.sin(pitch/2);
- return [cr*cp,sr*cp,cr*sp,-sr*sp]; // yaw = 0; no heading observable from gravity.
+function alignGravity(q,ax,ay,az){
+ // Apply the shortest correction to the PREVIOUS attitude. Rebuilding Euler
+ // angles with yaw=0 each sample causes a 180-degree heading jump at pitch=90.
+ // Accelerometer cannot observe heading: preserve the unconstrained twist
+ // locally, rather than impose a discontinuous global Euler convention.
+ const n=Math.hypot(ax,ay,az);if(n<0.05)return q;
+ const a=[0,ax/n,ay/n,az/n];
+ const [w,x,y,z]=q;
+ const world=qmul(qmul(q,a),[w,-x,-y,-z]);
+ // Rotate the measured world-frame up-vector toward [0,0,1].
+ const cx=world[2],cy=-world[1],sn=Math.hypot(cx,cy);
+ const dot=Math.max(-1,Math.min(1,world[3]));
+ let correction;
+ if(sn<1e-10){
+  // An exactly antipodal first sample has no unique tilt axis. Pick world X.
+  correction=dot>=0?[1,0,0,0]:[0,1,0,0];
+ }else{
+  const half=Math.atan2(sn,dot)/2,k=Math.sin(half)/sn;
+  correction=[Math.cos(half),cx*k,cy*k,0];
+ }
+ return qnorm(qmul(correction,q));
 }
 function drawOrient(ax,ay,az,gx=0,gy=0,gz=0,now=performance.now()){
  const mag=Math.hypot(ax,ay,az),fusion=$('fusion').checked;
  const dt=imu.last?(now-imu.last)/1000:0;imu.last=now;
  if(!fusion||!imu.ready||dt>0.5){
   if(mag<0.05)return;
-  imu.q=tiltQuaternion(ax,ay,az);imu.ready=true;
+  imu.q=alignGravity(imu.ready?imu.q:[1,0,0,0],ax,ay,az);imu.ready=true;
  }else if(dt>0){
   let wx=gx*Math.PI/180,wy=gy*Math.PI/180,wz=gz*Math.PI/180;
   const [w,x,y,z]=imu.q;
