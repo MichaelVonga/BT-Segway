@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт v5 — IMU без скачка на 90°</title>
+<title>NB-BT пульт — IMU</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -38,15 +38,12 @@
 
  .board-front{position:absolute;inset:0;transform:translateZ(7px);-webkit-backface-visibility:hidden;backface-visibility:hidden;transform-style:preserve-3d}
  #board_back{box-sizing:border-box;transform:translateZ(-7px) rotateY(180deg);-webkit-backface-visibility:hidden;backface-visibility:hidden}
- #imuStatus{padding:8px;border:1px solid #666;border-radius:8px;font:14px/1.5 monospace;margin-top:8px;overflow-wrap:anywhere}
  .imu-panel{padding:12px;background:#222;border:1px solid #555;border-radius:10px}
  .imu-panel label{display:block;margin:12px 0 4px;font-size:14px;line-height:1.5}
  .imu-panel input[type=checkbox]{width:22px;height:22px;vertical-align:middle}
- .imu-panel select,.imu-panel textarea{box-sizing:border-box;width:100%;padding:10px;font-size:16px;border-radius:6px}
- .imu-panel textarea{min-height:84px;font:14px monospace}
+ .imu-panel select{box-sizing:border-box;width:100%;padding:10px;font-size:16px;border-radius:6px}
  .imu-panel p{font-size:14px;line-height:1.5;color:#ddd}
  .imu-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.imu-actions button{padding:12px}
- #imuRaw{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.5 monospace;color:#bde}
  #d_angles{font-size:14px;line-height:1.5}
 </style></head><body>
 <button id="con">Подключиться к NB-BT</button>
@@ -109,24 +106,15 @@
  <div class="c"><span>gy, °/s</span><b id="d_gy">-</b></div>
  <div class="c"><span>gz, °/s</span><b id="d_gz">-</b></div>
 </div>
-<div id="imuStatus" role="status">IMU: ожидание строки #I,ax,ay,az,gx,gy,gz</div>
-<details id="imuDetails"><summary>IMU: диагностика и настройки</summary>
+<details id="imuSettings"><summary>Настройки IMU</summary>
 <div class="imu-panel">
-<p>Ожидается текстовая строка <code>#I,ax,ay,az,gx,gy,gz</code> с окончанием LF или CR. Начальные делители взяты из v3, а не подтверждены прошивкой.</p>
-<div id="imuRaw">Последняя строка IMU: —</div>
 <label for="accScale">Единиц пакета на 1 g (делитель акселерометра)</label><input id="accScale" type="number" min="0.001" step="any" value="1000">
 <label for="gyroScale">Единиц пакета на 1 °/с (делитель гироскопа)</label><input id="gyroScale" type="number" min="0.001" step="any" value="10">
 <label for="axisMap">Монтаж: поворот датчика вокруг Z относительно модели</label>
 <select id="axisMap"><option value="0">0°: X вправо, Y к верхнему краю модели</option><option value="90">+90°: X к верхнему краю, Y влево</option><option value="180">180°: X влево, Y к нижнему краю</option><option value="270">270°: X к нижнему краю, Y вправо</option></select>
 <label><input id="fusion" type="checkbox"> Использовать гироскоп (слияние с акселерометром)</label>
-<p>По умолчанию — наклон по акселерометру, без курса. Слияние включайте после проверки масштаба °/с. Без магнитометра курс относительный и будет дрейфовать. После длинной паузы наклон повторно привязывается к акселерометру. Время берётся по приходу строк в браузер, не по тактам IMU.</p>
-<p>Ракурс модели — строго сверху при нулевом наклоне. Ориентация обновляется непрерывно кватернионом. Числа Эйлера pitch/roll могут менять представление у ±90°, но из них больше не строится вращение модели. Без гироскопа поворот вокруг вертикали не измеряется, и сохранённый условный курс зависит от истории наклонов.</p>
-<p>Оси датчика предполагаются правыми, +Z — из лицевой стороны платы. Повороты монтажа выше не исправляют перевёрнутую установку или иной порядок полей.</p>
-<div class="imu-actions"><button id="imuReset" class="s" type="button">Сбросить ориентацию</button><button id="imuDemo" class="x" type="button">Тест 3D без Bluetooth</button></div>
-<label for="imuPaste">Вставить реальные строки из лога (локальная проверка, без отправки плате)</label>
-<textarea id="imuPaste" placeholder="#I,0,0,1000,0,0,0"></textarea>
-<button id="imuParse" class="s" type="button" style="margin-top:8px">Разобрать строки</button>
-<p>Проверяйте с вывешенными колёсами. Тест и разбор строк не посылают команд плате. Остальные органы управления работают как раньше.</p>
+<p>Без гироскопа отображается наклон, без измерения курса. С гироскопом курс относительный и может дрейфовать.</p>
+<div class="imu-actions"><button id="imuReset" class="s" type="button">Сбросить ориентацию</button></div>
 </div></details>
 <div id="link">Плата сигвея: нет данных</div>
 
@@ -261,7 +249,7 @@ function onCal(a){
 function setLink(ok){$('link').textContent=ok?'Плата сигвея: связь есть':'Плата сигвея: нет связи';$('link').style.background=ok?'#263':'#633'}
 async function connect(){
  try{
-  stopImuDemo(); resetImu(); inbuf=''; imuDiag.bytes=0; imuDiag.lines=0;
+  resetImu(); inbuf='';
   dev=await navigator.bluetooth.requestDevice({filters:[{services:[NUS]}],optionalServices:[NUS]});
   dev.addEventListener('gattserverdisconnected',()=>{rx=null;setJoy(false);inbuf='';resetImu();setLink(false);log('[отключено]\n');$('con').textContent='Подключиться к NB-BT';rx=null});
   const s=await(await dev.gatt.connect()).getPrimaryService(NUS);
@@ -284,41 +272,27 @@ $('wheeld').value=wheelD;
 $('wheeld').onchange=e=>{const v=parseFloat(e.target.value);if(v>=4&&v<=30){wheelD=v;localStorage.setItem('wheelD',v)}else e.target.value=wheelD};
 // IMU attitude: q rotates sensor/body coordinates into a Z-up world.
 // CSS uses Y down, so render S*R(q)*S, S=diag(1,-1,1).
-const imuDiag={bytes:0,lines:0,good:0,bad:0,last:0,raw:'',note:''};
 const imu={q:[1,0,0,0],last:0,ready:false};
-let demoTimer=null;
 function qmul(a,b){const [w,x,y,z]=a,[v,i,j,k]=b;return [w*v-x*i-y*j-z*k,w*i+x*v+y*k-z*j,w*j-x*k+y*v+z*i,w*k+x*j-y*i+z*v]}
 function qnorm(q){const n=Math.hypot(...q);return n>1e-12?q.map(x=>x/n):[1,0,0,0]}
-function resetImu(){imu.q=[1,0,0,0];imu.last=0;imu.ready=false;imuDiag.last=0;imuDiag.note='Оценка сброшена; ожидается следующий IMU-пакет';$('b3i').style.transform='none';$('b3i').style.webkitTransform='none';$('d_angles').textContent='pitch: —  roll: —';updateImuStatus()}
-function updateImuStatus(){
- const age=imuDiag.last?(performance.now()-imuDiag.last)/1000:null;
- const state=demoTimer?'ТЕСТ 3D — НЕ данные платы':age===null?'нет валидных данных IMU':age>1.5?'IMU: данные устарели':'IMU: данные поступают';
- $('imuStatus').textContent=state+' · RX '+imuDiag.bytes+' байт / '+imuDiag.lines+' строк · IMU '+imuDiag.good+' / ошибок '+imuDiag.bad+(age===null?'':' · возраст '+age.toFixed(1)+' с')+(imuDiag.note?' · '+imuDiag.note:'');
- $('imuStatus').style.borderColor=demoTimer?'#deb05e':age!==null&&age<=1.5?'#72bc8f':'#de9255';
-}
+function resetImu(){imu.q=[1,0,0,0];imu.last=0;imu.ready=false;$('b3i').style.transform='none';$('b3i').style.webkitTransform='none';$('d_angles').textContent='pitch: —  roll: —'}
 function feedRx(value){
- imuDiag.bytes+=value.byteLength;
- // NUS messages here are ASCII. One notification is not necessarily one line.
+ // Preserve line assembly across Bluetooth notifications; CR and LF accepted.
  inbuf+=new TextDecoder().decode(value);
- let m;while((m=inbuf.match(/[\r\n]/))){const i=m.index,line=inbuf.slice(0,i).trim();inbuf=inbuf.slice(i+1);if(line){imuDiag.lines++;onLine(line)}}
- if(inbuf.length>8192){inbuf='';imuDiag.note='Переполнение RX: нет разделителей CR/LF';log('[RX: сброшен буфер без окончания строки]\n')}
- updateImuStatus();
+ let m;while((m=inbuf.match(/[\r\n]/))){const i=m.index,line=inbuf.slice(0,i).trim();inbuf=inbuf.slice(i+1);if(line)onLine(line)}
+ if(inbuf.length>8192){inbuf='';log('[RX: сброшен буфер без окончания строки]\n')}
 }
 function mapAxes(x,y,z){switch(+$('axisMap').value){case 90:return [-y,x,z];case 180:return [-x,-y,z];case 270:return [y,-x,z];default:return [x,y,z]}}
 function onImuLine(s){
- imuDiag.raw=s;$('imuRaw').textContent='Последняя строка IMU: '+s;
  const fields=s.split(',').slice(1);
  const v=fields.map(Number),as=+$('accScale').value,gs=+$('gyroScale').value;
  if(fields.length!==6||fields.some(t=>!t.trim())||v.some(n=>!Number.isFinite(n))||!(as>0&&gs>0&&Number.isFinite(as)&&Number.isFinite(gs))){
-  imuDiag.bad++;imuDiag.note='Неверный #I: нужны ровно 6 чисел и положительные делители';updateImuStatus();return;
+  return;
  }
  const [ax,ay,az]=mapAxes(...v.slice(0,3).map(n=>n/as));
  const [gx,gy,gz]=mapAxes(...v.slice(3,6).map(n=>n/gs));
  for(const [id,val,dec] of [['ax',ax,3],['ay',ay,3],['az',az,3],['gx',gx,1],['gy',gy,1],['gz',gz,1]])$('d_'+id).textContent=val.toFixed(dec);
- imuDiag.good++;imuDiag.last=performance.now();
- const mag=Math.hypot(ax,ay,az);
- imuDiag.note=mag<0.05?'|a| слишком мало для оценки наклона':Math.abs(mag-1)>0.25?'|a|='+mag.toFixed(2)+' g: движение или неверный масштаб':'|a|='+mag.toFixed(2)+' g';
- drawOrient(ax,ay,az,gx,gy,gz,imuDiag.last);updateImuStatus();
+ drawOrient(ax,ay,az,gx,gy,gz,performance.now());
 }
 function alignGravity(q,ax,ay,az){
  // Apply the shortest correction to the PREVIOUS attitude. Rebuilding Euler
@@ -374,30 +348,8 @@ function renderImu(){
  const deg=180/Math.PI,roll=Math.atan2(r21,r22)*deg,pitch=Math.asin(Math.max(-1,Math.min(1,-r20)))*deg,yaw=Math.atan2(r10,r00)*deg;
  $('d_angles').textContent='pitch: '+pitch.toFixed(1)+'° · roll: '+roll.toFixed(1)+'° · '+($('fusion').checked?'yaw (отн.): '+yaw.toFixed(1)+'°':'yaw: не определяется');
 }
-function stopImuDemo(){
- if(!demoTimer)return;clearInterval(demoTimer);demoTimer=null;$('imuDemo').textContent='Тест 3D без Bluetooth';resetImu();
-}
 $('imuReset').onclick=resetImu;
-for(const id of ['accScale','gyroScale','axisMap','fusion'])$(id).onchange=()=>{stopImuDemo();resetImu()};
-$('imuDemo').onclick=()=>{
- if(demoTimer){stopImuDemo();return}
- if(dev?.gatt?.connected||rx){log('Тест 3D доступен только без Bluetooth-подключения\n');return}
- resetImu();const start=performance.now();$('imuDemo').textContent='Остановить тест 3D';
- demoTimer=setInterval(()=>{
-  // A local visual check, NOT injected into telemetry counters or sent to BLE.
-  const t=(performance.now()-start)/1000;
-  imu.q=qnorm(qmul([Math.cos(t*0.35),0,0,Math.sin(t*0.35)],qmul([Math.cos(t*0.5),Math.sin(t*0.5),0,0],[Math.cos(0.3*Math.sin(t)),0,Math.sin(0.3*Math.sin(t)),0])));
-  renderImu();$('d_angles').textContent='ТЕСТ 3D — синтетическое вращение, не телеметрия';updateImuStatus();
- },33);
-};
-$('imuParse').onclick=()=>{
- if(dev?.gatt?.connected||rx){log('Локальный разбор доступен только без Bluetooth-подключения\n');return}
- stopImuDemo();resetImu();
- const lines=$('imuPaste').value.split(/[\r\n]+/).map(s=>s.trim()).filter(Boolean);
- for(const line of lines){if(line.startsWith('#I,'))onImuLine(line);else log('[Локальный разбор: ожидается #I,...] '+line+'\n')}
- imuDiag.note+=' · локальный разбор, не живые данные';updateImuStatus();
-};
-setInterval(updateImuStatus,500);
+for(const id of ['accScale','gyroScale','axisMap','fusion'])$(id).onchange=resetImu;
 
 function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
