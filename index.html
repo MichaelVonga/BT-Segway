@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт v10.1 — ориентация на STM32</title>
+<title>NB-BT пульт v9 — автокалибровка IMU</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -101,7 +101,7 @@
  </div>
 </div>
 <div id="d_angles">pitch: -- °  roll: -- °</div>
-<div id="imuMode" role="status">IMU: ожидание ориентации со STM32</div>
+<div id="imuMode" role="status">IMU: только наклон — гироскоп не откалиброван</div>
 <div class="dash" style="grid-template-columns:repeat(3,1fr);margin-top:4px">
  <div class="c"><span>ax, g</span><b id="d_ax">-</b></div>
  <div class="c"><span>ay, g</span><b id="d_ay">-</b></div>
@@ -112,14 +112,16 @@
 </div>
 <details id="imuSettings"><summary>Настройки IMU</summary>
 <div class="imu-panel">
+<label for="accScale">Единиц пакета на 1 g (делитель акселерометра)</label><input id="accScale" type="number" min="0.001" step="any" value="1000">
+<label for="gyroScale">Единиц пакета на 1 °/с (делитель гироскопа)</label><input id="gyroScale" type="number" min="0.001" step="any" value="10">
 <label for="axisMap">Монтаж: поворот датчика вокруг Z относительно модели</label>
 <select id="axisMap"><option value="0">0°: X вправо, Y к верхнему краю модели</option><option value="90">+90°: X к верхнему краю, Y влево</option><option value="180">180°: X влево, Y к нижнему краю</option><option value="270">270°: X к нижнему краю, Y вправо</option></select>
-<p>Ориентация рассчитывается на STM32 по акселерометру и гироскопу. Страница отображает готовый кватернион; отдельного переключателя слияния больше нет.</p>
-<p>При запуске платы и после подключения начинается автокалибровка. Оставьте плату неподвижной примерно на 4 секунды в любом положении, без вибраций. При движении окно измерений начинается заново. Медленное равномерное вращение может быть принято за смещение нуля.</p>
-<div class="imu-actions"><button id="gyroZeroBtn" class="s" type="button">Калибровать гироскоп</button></div>
-<p id="gyroZeroStatus" role="status">Ожидание подключения.</p>
-<p>gx/gy/gz — скорость с вычтенным нулём после калибровки. Курс относительный: без магнитометра остаточный дрейф возможен. Кнопка ниже задаёт нулевой курс только для модели, не меняя наклон и прошивку.</p>
-<div class="imu-actions"><button id="imuReset" class="s" type="button">Обнулить курс модели</button></div>
+<label><input id="fusion" type="checkbox"> Использовать гироскоп (слияние с акселерометром)</label>
+<p>После подключения автокалибровка ищет около 4 секунд стабильных измерений. Оставьте плату неподвижной в любом положении, без вибраций. При движении попытка повторится. Не вращайте плату равномерно: медленный постоянный поворот нельзя надёжно отличить от смещения нуля. Если автоматический режим не завершается, остановите плату и воспользуйтесь кнопкой ниже.</p>
+<div class="imu-actions"><button id="gyroZeroBtn" class="s" type="button">Калибровать вручную</button></div>
+<p id="gyroZeroStatus" role="status">Автокалибровка начнётся после подключения.</p>
+<p>После успешной калибровки слияние включается автоматически. Калибровка действует до переподключения или перезагрузки страницы. gx/gy/gz показывают скорость с вычтенным нулём. Без магнитометра курс относительный, остаточный дрейф возможен.</p>
+<div class="imu-actions"><button id="imuReset" class="s" type="button">Сбросить ориентацию</button></div>
 </div></details>
 <div id="link">Плата сигвея: нет данных</div>
 
@@ -222,8 +224,6 @@ function onLine(s){
   $('d_en').textContent=(st&1?'ВКЛ':'выкл')+(st&16?' 🕹':'')+(err?' E'+(err&255)+'/'+(err>>8):'')+(st&2?' TO':'');
   if(!filled){$('imax').value=Math.round(imax/10);$('nmax').value=nmax;filled=true}
   setLink(true);
- } else if(s.startsWith('#Q,')){
-  onQuaternionLine(s);
  } else if(s.startsWith('#I,')){
   onImuLine(s);
  } else if(s.startsWith('#P,'))onPed(s.split(',').slice(1).map(Number));
@@ -256,17 +256,17 @@ function onCal(a){
 function setLink(ok){$('link').textContent=ok?'Плата сигвея: связь есть':'Плата сигвея: нет связи';$('link').style.background=ok?'#263':'#633'}
 async function connect(){
  try{
-  resetImu(); inbuf='';
+  stopAutoGyroZero();clearGyroZero();resetImu(); inbuf='';
   dev=await navigator.bluetooth.requestDevice({filters:[{services:[NUS]}],optionalServices:[NUS]});
-  dev.addEventListener('gattserverdisconnected',()=>{rx=null;setJoy(false);inbuf='';resetImu();setLink(false);log('[отключено]\n');$('con').textContent='Подключиться к NB-BT';rx=null});
+  dev.addEventListener('gattserverdisconnected',()=>{rx=null;setJoy(false);inbuf='';stopAutoGyroZero();clearGyroZero();resetImu();setLink(false);log('[отключено]\n');$('con').textContent='Подключиться к NB-BT';rx=null});
   const s=await(await dev.gatt.connect()).getPrimaryService(NUS);
   rx=await s.getCharacteristic(RX);
   const tx=await s.getCharacteristic(TX);
   // Register before enabling notifications: the first notification can arrive immediately.
   tx.addEventListener('characteristicvaluechanged',e=>feedRx(e.target.value));
   await tx.startNotifications();
-  $('con').textContent='Подключено: '+dev.name;log('[подключено]\n');await send('PRAW');await send('$IMUCAL');
- }catch(e){log('Ошибка: '+e+'\n')}
+  $('con').textContent='Подключено: '+dev.name;log('[подключено]\n');startAutoGyroZero();send('PRAW');
+ }catch(e){stopAutoGyroZero();log('Ошибка: '+e+'\n')}
 }
 async function send(c){if(!rx){log('Сначала подключитесь\n');return}
  const d=new TextEncoder().encode(c);
@@ -277,63 +277,137 @@ let wheelD=parseFloat(localStorage.getItem('wheelD'))||10.5;
 function kmh(rpm){return rpm*Math.PI*wheelD*0.0254*60/1000}
 $('wheeld').value=wheelD;
 $('wheeld').onchange=e=>{const v=parseFloat(e.target.value);if(v>=4&&v<=30){wheelD=v;localStorage.setItem('wheelD',v)}else e.target.value=wheelD};
-// MCU attitude protocol v1. No gyro integration or calibration in JavaScript.
-// q rotates sensor/body into a Z-up world; CSS Y points down: S*R(q)*S.
-const imu={source:[1,0,0,0],q:[1,0,0,0],flags:0,seq:null,ms:null,last:0,ready:false,yawOffset:0};
+// IMU attitude: q rotates sensor/body coordinates into a Z-up world.
+// CSS uses Y down, so render S*R(q)*S, S=diag(1,-1,1).
+const imu={q:[1,0,0,0],last:0,ready:false};
 function qmul(a,b){const [w,x,y,z]=a,[v,i,j,k]=b;return [w*v-x*i-y*j-z*k,w*i+x*v+y*k-z*j,w*j-x*k+y*v+z*i,w*k+x*j-y*i+z*v]}
 function qnorm(q){const n=Math.hypot(...q);return n>1e-12?q.map(x=>x/n):[1,0,0,0]}
-function resetImu(){
- Object.assign(imu,{source:[1,0,0,0],q:[1,0,0,0],flags:0,seq:null,ms:null,last:0,ready:false,yawOffset:0});
- for(const id of ['ax','ay','az','gx','gy','gz'])$('d_'+id).textContent='-';
- renderImu();syncImuStatus();
-}
+function resetImu(){imu.q=[1,0,0,0];imu.last=0;imu.ready=false;$('b3i').style.transform='none';$('b3i').style.webkitTransform='none';renderImu()}
 function feedRx(value){
+ // Preserve line assembly across Bluetooth notifications; CR and LF accepted.
  inbuf+=new TextDecoder().decode(value);
  let m;while((m=inbuf.match(/[\r\n]/))){const i=m.index,line=inbuf.slice(0,i).trim();inbuf=inbuf.slice(i+1);if(line)onLine(line)}
  if(inbuf.length>8192){inbuf='';log('[RX: сброшен буфер без окончания строки]\n')}
 }
+function mapAxes(x,y,z){switch(+$('axisMap').value){case 90:return [-y,x,z];case 180:return [-x,-y,z];case 270:return [y,-x,z];default:return [x,y,z]}}
+// Browser-side zero-rate calibration; never sends commands to the board.
+const autoZero={armed:false,retry:null};
+function stopAutoGyroZero(){autoZero.armed=false;clearTimeout(autoZero.retry);autoZero.retry=null}
+function startAutoGyroZero(){stopAutoGyroZero();autoZero.armed=true;startGyroZero(true)}
+function retryAutoGyroZero(){
+ clearTimeout(autoZero.retry);
+ autoZero.retry=setTimeout(()=>{autoZero.retry=null;if(autoZero.armed&&rx&&dev?.gatt?.connected)startGyroZero(true);else stopAutoGyroZero()},1000);
+}
+const gyroZero={bias:[0,0,0],valid:false,config:null,cal:null,timer:null};
+function imuConfigKey(){return JSON.stringify([+$('accScale').value,+$('gyroScale').value,+$('axisMap').value])}
+function hasGyroZero(){return gyroZero.valid&&gyroZero.config===imuConfigKey()}
+function fusionEnabled(){return $('fusion').checked&&hasGyroZero()&&!gyroZero.cal}
+function syncFusionStatus(){
+ if(!hasGyroZero()||gyroZero.cal)$('fusion').checked=false;
+ $('imuMode').textContent=gyroZero.cal?'IMU: калибровка — оставьте плату неподвижной':fusionEnabled()?'IMU: слияние включено — акселерометр + гироскоп':hasGyroZero()?'IMU: только наклон — слияние выключено':autoZero.armed?'IMU: ожидание неподвижности для автокалибровки':'IMU: только наклон — нужна калибровка гироскопа';
+}
+
+function gyroZeroMessage(text){$('gyroZeroStatus').textContent=text}
+function endGyroZero(message){
+ const retry=gyroZero.cal?.automatic&&autoZero.armed&&!hasGyroZero();
+ clearTimeout(gyroZero.timer);gyroZero.timer=null;gyroZero.cal=null;
+ $('gyroZeroBtn').disabled=false;
+ syncFusionStatus();
+ if(message)gyroZeroMessage(message+(retry?' Автоматически повторю после паузы.':''));
+ if(retry)retryAutoGyroZero();
+}
+function clearGyroZero(message='Для слияния сначала откалибруйте ноль гироскопа.'){
+ endGyroZero();gyroZero.bias=[0,0,0];gyroZero.valid=false;gyroZero.config=null;$('fusion').checked=false;syncFusionStatus();
+ gyroZeroMessage(message);
+}
+function startGyroZero(automatic=false){
+ if(!automatic)stopAutoGyroZero();
+ clearTimeout(autoZero.retry);autoZero.retry=null;
+ if(automatic&&!autoZero.armed)return;
+ if(!rx||!dev?.gatt?.connected){stopAutoGyroZero();gyroZeroMessage('Сначала подключитесь к плате.');return}
+ clearGyroZero();
+ gyroZero.cal={automatic,config:imuConfigKey(),first:null,last:null,n:0,mean:[0,0,0,0,0,0],m2:[0,0,0,0,0,0]};
+ $('gyroZeroBtn').disabled=true;syncFusionStatus();
+ gyroZeroMessage((automatic?'Автокалибровка':'Калибровка')+': не трогайте плату около 4 секунд.');
+ gyroZero.timer=setTimeout(()=>{endGyroZero('Не удалось: нет непрерывного потока IMU. Повторите калибровку.');resetImu()},6500);
+}
+function sampleGyroZero(a,g,now){
+ const c=gyroZero.cal;if(!c)return;
+ if(c.first===null)c.first=now;
+ if(c.last!==null&&now-c.last>500){endGyroZero('Калибровка прервана: пауза в данных. Повторите.');return}
+ c.last=now;
+ if(Math.abs(Math.hypot(...a)-1)>0.15||Math.hypot(...g)>(c.automatic?10:50)){endGyroZero('Калибровка прервана: движение или неверный масштаб.');return}
+ const values=[...g,...a];c.n++;
+ for(let i=0;i<6;i++){const d=values[i]-c.mean[i];c.mean[i]+=d/c.n;c.m2[i]+=d*(values[i]-c.mean[i])}
+ if(now-c.first<4000)return;
+ if(c.n<60){endGyroZero('Недостаточно измерений IMU. Повторите калибровку.');return}
+ const sd=c.m2.map(x=>Math.sqrt(Math.max(0,x/(c.n-1))));
+ if(sd.slice(0,3).some(x=>x>0.5)||sd.slice(3).some(x=>x>0.02)){
+  endGyroZero('Плата двигалась или вибрировала. Положите неподвижно и повторите.');return;
+ }
+ stopAutoGyroZero();
+ gyroZero.bias=c.mean.slice(0,3);gyroZero.valid=true;gyroZero.config=c.config;$('fusion').checked=true;
+ endGyroZero('Калибровка завершена. Слияние с гироскопом включено.');
+ resetImu();
+}
+$('gyroZeroBtn').onclick=()=>startGyroZero(false);
+
 function onImuLine(s){
- const fields=s.split(',').slice(1);if(fields.length!==6||fields.some(x=>x.trim()===''))return;
- const v=fields.map(Number);if(!v.every(Number.isFinite))return;
- ['ax','ay','az','gx','gy','gz'].forEach((id,i)=>$('d_'+id).textContent=(v[i]/(i<3?1000:10)).toFixed(i<3?3:1));
+ const fields=s.split(',').slice(1);
+ const v=fields.map(Number),as=+$('accScale').value,gs=+$('gyroScale').value;
+ if(fields.length!==6||fields.some(t=>!t.trim())||v.some(n=>!Number.isFinite(n))||!(as>0&&gs>0&&Number.isFinite(as)&&Number.isFinite(gs))){
+  return;
+ }
+ const [ax,ay,az]=mapAxes(...v.slice(0,3).map(n=>n/as));
+ const rawG=mapAxes(...v.slice(3,6).map(n=>n/gs));
+ const now=performance.now();sampleGyroZero([ax,ay,az],rawG,now);
+ const [gx,gy,gz]=rawG.map((n,i)=>n-(hasGyroZero()?gyroZero.bias[i]:0));
+ for(const [id,val,dec] of [['ax',ax,3],['ay',ay,3],['az',az,3],['gx',gx,1],['gy',gy,1],['gz',gz,1]])$('d_'+id).textContent=val.toFixed(dec);
+ drawOrient(ax,ay,az,gx,gy,gz,now);
 }
-function onQuaternionLine(s){
- const fields=s.split(',').slice(1);if(fields.length!==8||fields.some(x=>!/^\d+$|^-\d+$/.test(x)))return false;
- const v=fields.map(Number);if(!v.every(Number.isSafeInteger))return false;
- const [version,flags,seq,ms,...raw]=v;
- if(version!==1||flags<0||flags>65535||seq<0||seq>65535||ms<0||ms>4294967295||raw.some(x=>Math.abs(x)>16384))return false;
- const q=raw.map(x=>x/16384),norm=Math.hypot(...q);
- if((flags&3)===3 && (norm<.8||norm>1.2))return false;
- if(seq===imu.seq && ms===imu.ms)return false; // repeated UART feedback isn't a fresh sample
- if((flags&8) && !(imu.flags&8))imu.yawOffset=0;
- imu.flags=flags;imu.seq=seq;imu.ms=ms;imu.last=performance.now();
- imu.ready=(flags&3)===3;
- if(imu.ready){imu.source=qnorm(q);applyModelOrientation()}else renderImu();
- syncImuStatus();return true;
+function alignGravity(q,ax,ay,az){
+ // Apply the shortest correction to the PREVIOUS attitude. Rebuilding Euler
+ // angles with yaw=0 each sample causes a 180-degree heading jump at pitch=90.
+ // Accelerometer cannot observe heading: preserve the unconstrained twist
+ // locally, rather than impose a discontinuous global Euler convention.
+ const n=Math.hypot(ax,ay,az);if(n<0.05)return q;
+ const a=[0,ax/n,ay/n,az/n];
+ const [w,x,y,z]=q;
+ const world=qmul(qmul(q,a),[w,-x,-y,-z]);
+ // Rotate the measured world-frame up-vector toward [0,0,1].
+ const cx=world[2],cy=-world[1],sn=Math.hypot(cx,cy);
+ const dot=Math.max(-1,Math.min(1,world[3]));
+ let correction;
+ if(sn<1e-10){
+  // An exactly antipodal first sample has no unique tilt axis. Pick world X.
+  correction=dot>=0?[1,0,0,0]:[0,1,0,0];
+ }else{
+  const half=Math.atan2(sn,dot)/2,k=Math.sin(half)/sn;
+  correction=[Math.cos(half),cx*k,cy*k,0];
+ }
+ return qnorm(qmul(correction,q));
 }
-function mappedQuaternion(){
- const half=(+$('axisMap').value)*Math.PI/360,z=[Math.cos(half),0,0,Math.sin(half)];
- return qmul(qmul(z,imu.source),[z[0],0,0,-z[3]]);
-}
-function applyModelOrientation(){
- const h=imu.yawOffset/2;
- imu.q=qnorm(qmul([Math.cos(h),0,0,Math.sin(h)],mappedQuaternion()));renderImu();
-}
-function syncImuStatus(){
- let text;
- if(imu.seq===null)text='ожидание ориентации со STM32';
- else if(performance.now()-imu.last>1500)text='нет свежей ориентации со STM32';
- else if(!(imu.flags&1))text='датчик не обнаружен';
- else if(imu.flags&8)text='автокалибровка — оставьте плату неподвижной';
- else if(!(imu.flags&2))text='ожидание измерений';
- else if(!(imu.flags&4))text='только наклон — нужна калибровка';
- else text='слияние на STM32 · курс относительный';
- if(imu.flags&16)text+=' · предел скорости гироскопа';
- if(imu.flags&32)text+=' · пропуск измерений, возможна ошибка курса';
- $('imuMode').textContent='IMU: '+text;
- const reasons=['набираются стабильные измерения','паузы между измерениями больше 30 мс','ускорение вне 0.85–1.15 g','угловая скорость больше 10°/с','меняются показания акселерометра','нестабильные показания гироскопа'];
- const reason=(imu.flags>>6)&7;
- $('gyroZeroStatus').textContent=imu.flags&8?'Калибровка на плате: '+(reasons[reason]||'ожидание измерений')+'.':imu.flags&4?'Ноль гироскопа откалиброван на STM32.':'Ожидание калибровки на STM32.';
+function drawOrient(ax,ay,az,gx=0,gy=0,gz=0,now=performance.now()){
+ const mag=Math.hypot(ax,ay,az),fusion=fusionEnabled();
+ const dt=imu.last?(now-imu.last)/1000:0;imu.last=now;
+ if(!fusion||!imu.ready||dt>0.5){
+  if(mag<0.05)return;
+  imu.q=alignGravity(imu.ready?imu.q:[1,0,0,0],ax,ay,az);imu.ready=true;
+ }else if(dt>0){
+  let wx=gx*Math.PI/180,wy=gy*Math.PI/180,wz=gz*Math.PI/180;
+  const [w,x,y,z]=imu.q;
+  // Correction only near 1 g: linear acceleration is not a gravity reference.
+  if(mag>=0.75&&mag<=1.25){
+   const a=[ax/mag,ay/mag,az/mag];
+   const g=[2*(x*z-w*y),2*(y*z+w*x),1-2*(x*x+y*y)];
+   const kp=2.5;
+   wx+=kp*(a[1]*g[2]-a[2]*g[1]);wy+=kp*(a[2]*g[0]-a[0]*g[2]);wz+=kp*(a[0]*g[1]-a[1]*g[0]);
+  }
+  // Exact incremental quaternion avoids first-order integration error.
+  const rate=Math.hypot(wx,wy,wz),half=rate*dt/2,k=rate>1e-12?Math.sin(half)/rate:dt/2;
+  imu.q=qnorm(qmul(imu.q,[Math.cos(half),wx*k,wy*k,wz*k]));
+ }
+ renderImu();
 }
 function renderImu(){
  const [w,x,y,z]=imu.q;
@@ -343,17 +417,19 @@ function renderImu(){
  const matrix=[r00,-r10,r20,0,-r01,r11,-r21,0,r02,-r12,r22,0,0,0,0,1];
  const t='matrix3d('+matrix.join(',')+')';$('b3i').style.transform=t;$('b3i').style.webkitTransform=t;
  const deg=180/Math.PI,roll=Math.atan2(r21,r22)*deg,pitch=Math.asin(Math.max(-1,Math.min(1,-r20)))*deg,yaw=Math.atan2(r10,r00)*deg;
- $('d_angles').textContent=imu.ready?'pitch: '+pitch.toFixed(1)+'° · roll: '+roll.toFixed(1)+'° · '+((imu.flags&4)?'yaw (отн.): '+yaw.toFixed(1)+'°':'yaw: калибровка'):'pitch: -- ° · roll: -- °';
+ $('d_angles').textContent='pitch: '+pitch.toFixed(1)+'° · roll: '+roll.toFixed(1)+'° · '+(fusionEnabled()?'yaw (отн.): '+yaw.toFixed(1)+'°':'yaw: не определяется');
 }
-$('gyroZeroBtn').onclick=async()=>{if(!rx){log('Сначала подключитесь\n');return}try{await send('$IMUCAL')}catch(e){log('Ошибка: '+e+'\n')}};
-$('imuReset').onclick=()=>{
- if(!imu.ready)return;
- const [w,x,y,z]=mappedQuaternion();
- imu.yawOffset=-Math.atan2(2*(x*y+w*z),1-2*(y*y+z*z));applyModelOrientation();
+$('imuReset').onclick=resetImu;
+for(const id of ['accScale','gyroScale','axisMap'])$(id).onchange=()=>{
+ const calibratedConfig=gyroZero.cal?gyroZero.cal.config:gyroZero.config;
+ if(calibratedConfig!==null&&calibratedConfig!==imuConfigKey()){clearGyroZero('Настройки IMU изменены — нужна повторная калибровка.');resetImu()}else syncFusionStatus();
 };
-$('axisMap').onchange=()=>{imu.yawOffset=0;applyModelOrientation()};
-setInterval(syncImuStatus,500);
-resetImu();
+$('fusion').onchange=()=>{
+ if($('fusion').checked&&(!hasGyroZero()||gyroZero.cal)){
+  $('fusion').checked=false;gyroZeroMessage(gyroZero.cal?'Дождитесь завершения калибровки.':'Слияние не включено: сначала нажмите «Калибровать вручную» и дождитесь завершения.');
+ }
+ syncFusionStatus();resetImu();
+};
 
 function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
