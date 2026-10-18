@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт v11.1 — ориентация на STM32</title>
+<title>NB-BT пульт v11.2 — ориентация на STM32</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -190,11 +190,11 @@
 <label>Режим<select id="driveKind"><option value="0">Джойстик</option><option value="1">Педали</option></select></label>
 <label>Источник<select id="inputKind"><option value="0">Виртуальный</option><option value="1">Физический</option></select></label>
 </div>
-<div id="controlState" role="status" aria-live="polite">Ожидание Bluetooth-платы с прошивкой v11.1</div>
+<div id="controlState" role="status" aria-live="polite">Ожидание Bluetooth-платы с прошивкой v11.2</div>
 <button id="autoPhysical" class="s" style="width:100%;margin-bottom:12px">Автоопределить физические входы</button>
 <div class="control-actions"><button id="arm" disabled>Разрешить управление</button><button id="stopControl" class="x">СТОП / выключить</button></div>
-<p class="control-note">Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения.<br>Bluetooth не нужен для физических входов. Виртуальные включаются кнопкой и выключаются при потере связи. СТОП защёлкивает остановку для всех источников.</p>
-<label class="power-label">Ограничение тяги / руля: <b id="pwrv">30</b>%<input id="pwr" type="range" min="10" max="100" step="5" value="30"></label>
+<p class="control-note">Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения. Физические входы: лимит по умолчанию 100%, виртуальные — 30%; ручная настройка сохраняется до перезапуска отдельно для каждой группы.<br>Bluetooth не нужен для физических входов. Если за 4 секунды физические входы не определены, выбирается виртуальный джойстик с автоматическим разрешением после нейтрали. Он выключается при потере связи. После СТОП требуется явное возобновление. СТОП защёлкивает остановку для всех источников.</p>
+<label class="power-label">Ограничение тяги / руля: <b id="pwrv">100</b>%<input id="pwr" type="range" min="10" max="100" step="5" value="100"></label>
 <div id="joyPanel">
 <div id="joyw"><div id="joy" aria-label="Джойстик" role="group"><div id="knob"></div></div><div id="joyv">руль 0 · газ 0</div></div>
 <p id="joyHint" class="control-note">Удерживайте джойстик. При отпускании команда возвращается в ноль.</p>
@@ -450,7 +450,7 @@ function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
 
 // One source selector; UI never claims a mode change until #S from BT confirms it.
-const controlAuto={known:false,detect:false,allowed:false,pedalValid:false,defaultJoy:true};
+const controlAuto={known:false,detect:false,allowed:false,pedalValid:false,defaultJoy:true,virtualAllowed:false};
 const control={source:0,pending:0,armed:false,waiting:false,error:0,valid:false,stage:0,last:0};
 let requestedSource=null,sourceRequestedAt=0,jx=0,jy=0,virtualBusy=false,localMessage='';
 const joy=$('joy'),knob=$('knob');
@@ -475,7 +475,7 @@ function syncControls(){
  $('joyHint').textContent=physical?'Положение физического джойстика. Круг на экране только показывает данные.':'Удерживайте джойстик. Отпускание — возврат команды в ноль.';
  joy.classList.toggle('on',fresh&&control.armed&&control.source===0);
  $('autoPhysical').disabled=!rx||!fresh||control.pending!==0||control.armed||control.waiting;
- $('arm').hidden=physical&&(controlAuto.detect||controlAuto.allowed);
+ $('arm').hidden=(physical&&(controlAuto.detect||controlAuto.allowed))||(control.source===0&&controlAuto.virtualAllowed);
  document.querySelector('.control-actions').style.gridTemplateColumns=$('arm').hidden?'1fr':'repeat(2,minmax(0,1fr))';
  $('arm').disabled=!rx||!fresh||control.pending!==0||requestedSource!==null||control.stage!==0||control.error===1||control.error===2;
  $('arm').textContent=control.armed?'Управление включено':control.waiting?'Ожидание нейтрали…':physical?'Возобновить после СТОП':'Разрешить управление';
@@ -483,15 +483,16 @@ function syncControls(){
  $('jcalsave').disabled=control.stage!==2||!fresh;
  for(const id of ['vThr','vBrk'])$(id).disabled=!fresh||!control.armed||control.source!==2;
  $('pwr').disabled=!fresh||control.pending!==0;
- let message=!rx?'Подключитесь к Bluetooth-плате.':!fresh?'Нет свежего статуса источника. Нужна прошивка BT v11.1.':requestedSource!==null||control.pending?'Переключение источника — управление выключено.':controlErrors[control.error]|| (control.stage===1?'Калибровка центра: отпустите ручку и не трогайте её.':control.stage===2?'Обведите все края, верните в центр и сохраните.':control.waiting?'Ожидание нейтрали 0,6 с.':control.armed?'Управление разрешено.':'Управление выключено.');
+ let message=!rx?'Подключитесь к Bluetooth-плате.':!fresh?'Нет свежего статуса источника. Нужна прошивка BT v11.2.':requestedSource!==null||control.pending?'Переключение источника — управление выключено.':controlErrors[control.error]|| (control.stage===1?'Калибровка центра: отпустите ручку и не трогайте её.':control.stage===2?'Обведите все края, верните в центр и сохраните.':control.waiting?'Ожидание нейтрали 0,6 с.':control.armed?'Управление разрешено.':'Управление выключено.');
  if(rx&&fresh&&controlAuto.detect)message='Автоопределение: отпустите оба входа. Ожидаются стабильные напряжения около 0,8 В (педали) или 1,65 В (джойстик).';
+ else if(rx&&fresh&&control.source===0&&controlAuto.virtualAllowed&&!control.pending&&!control.armed)message='Виртуальный джойстик выбран автоматически. Ожидание нейтрали и связи 0,6 с — отдельное разрешение не нужно.';
  else if(rx&&fresh&&physical&&controlAuto.allowed&&!control.pending&&!control.error&&!control.stage&&!control.armed)message='Автозапуск: верните входы в нейтраль и остановите колёса.';
  $('controlState').textContent=(fresh?(controlAuto.detect?'Тип ещё не определён':sourceNames[control.source])+'. ':'')+message+(localMessage?' '+localMessage:'');
  $('joyCalState').textContent=control.stage===1?'Шаг 1/2: центр, около 1 секунды стабильных измерений.':control.stage===2?'Шаг 2/2: пройдите все крайние положения и отпустите ручку.':control.valid?'Калибровка джойстика сохранена.':'До первой калибровки: центр около 1,65 В, диапазон 0–3,3 В, мёртвая зона 20%. Уточните диапазон калибровкой.';
 }
 function onAutoStatus(line){
- const v=line.slice(3).split(',').map(Number);if(v.length!==4||!v.every(x=>x===0||x===1))return;
- Object.assign(controlAuto,{known:true,detect:!!v[0],allowed:!!v[1],pedalValid:!!v[2],defaultJoy:!!v[3]});syncControls();
+ const v=line.slice(3).split(',').map(Number);if((v.length!==4&&v.length!==5)||!v.every(x=>x===0||x===1))return;
+ Object.assign(controlAuto,{known:true,detect:!!v[0],allowed:!!v[1],pedalValid:!!v[2],defaultJoy:!!v[3],virtualAllowed:!!v[4]});syncControls();
 }
 function onControls(line){
  const v=line.slice(3).split(',').map(Number);if(v.length!==18||!v.every(Number.isFinite)||v[0]<0||v[0]>3)return;
@@ -522,7 +523,7 @@ $('arm').onclick=async()=>{resetInputs();await virtualTick(true);await guardedSe
 async function stopControls(){resetInputs();control.armed=false;control.waiting=false;syncControls();if(rx)await guardedSend('STOP')}
 $('stopControl').onclick=stopControls;
 $('autoPhysical').onclick=async()=>{resetInputs();await guardedSend('AUTO')};
-function disconnectControls(){resetInputs();control.last=0;control.armed=control.waiting=false;requestedSource=null;controlAuto.known=false;controlAuto.detect=false;controlAuto.allowed=false;syncControls()}
+function disconnectControls(){resetInputs();control.last=0;control.armed=control.waiting=false;requestedSource=null;controlAuto.known=false;controlAuto.detect=false;controlAuto.allowed=false;controlAuto.virtualAllowed=false;syncControls()}
 function joyPos(e){
  if(control.source!==0||!control.armed||!freshControls())return;
  const r=joy.getBoundingClientRect(),R=r.width/2;let x=(e.clientX-r.left-R)/R,y=(e.clientY-r.top-R)/R;
