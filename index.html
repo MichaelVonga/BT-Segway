@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт v10.5 — ориентация на STM32</title>
+<title>NB-BT пульт v11 — ориентация на STM32</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -61,6 +61,33 @@
  .imu-axes .c b{width:7ch;max-width:100%;margin:2px auto 0;text-align:right;white-space:nowrap;
    font:700 18px/1.3 ui-monospace,SFMono-Regular,Consolas,monospace;font-variant-numeric:tabular-nums}
  @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+[hidden]{display:none!important}
+.controls-card{margin:24px 0;padding:16px;border:1px solid #444;border-radius:10px;background:#191919}
+.controls-card button:not(.x):not(.m){background:#197246}
+#physicalReadings .c span{display:block;font-size:14px;line-height:1.4}
+#rawLabelA,#rawLabelB{min-height:42px}
+.controls-card h3{margin:0 0 16px}
+.control-selects,.control-actions,.pedal-sliders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.control-selects label,.pedal-sliders label{display:block;min-width:0;font-size:16px;line-height:1.5}
+.control-selects select{display:block;width:100%;min-height:44px;margin-top:8px;box-sizing:border-box;font-size:16px}
+#controlState{margin:16px 0;min-height:48px;font-size:16px;line-height:1.5;color:#bbd9ef}
+.control-actions button,.cal-actions button{min-height:48px;margin:0;font-size:16px;white-space:normal}
+.controls-card button:disabled{opacity:.45;cursor:not-allowed}
+.control-note{color:#c3c3c3;font-size:14px;line-height:1.6;margin:12px 0 16px}
+.power-label{display:block;margin:16px 0;font-size:16px}
+.power-label input{display:block;width:100%;min-height:44px;margin-top:4px}
+.pedal-sliders{margin:16px 0}
+.pedal-sliders input{display:block;width:100%;min-height:52px;margin:8px 0;touch-action:none}
+.pedal-sliders output{display:block;font:700 24px/1.5 monospace;color:#fff}
+.cal-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:16px 0}
+.check-label{display:flex;align-items:center;gap:8px;min-height:44px;font-size:16px}
+.check-label input{width:22px;height:22px;flex-shrink:0}
+#joyCalState{font-size:14px;line-height:1.6;color:#bbd9ef;margin:12px 0}
+#physicalCalibration{margin-top:20px}#physicalCalibration summary{min-height:44px;line-height:1.5}
+#reverseControl,#saveStickConfig{width:100%;min-height:44px;margin-top:12px}
+#joy{touch-action:none}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #88bfff;outline-offset:3px}
+@media(max-width:420px){.controls-card{padding:12px}.control-selects,.control-actions{gap:8px}.cal-actions{grid-template-columns:1fr}.control-actions button{font-size:14px}}
 </style></head><body>
 <button id="con">Подключиться к NB-BT</button>
 <div id="board3d">
@@ -156,34 +183,50 @@
  <div class="c"><span>Диаметр колеса, дюйм</span><input id="wheeld" type="number" min="4" max="30" step="0.1" style="width:100%"></div>
 </div>
 
-<h3>Режим управления</h3>
-<div id="hcm" style="text-align:center;margin-bottom:6px;color:#aaa">Режим: -</div>
-<div class="g3" style="grid-template-columns:1fr 1fr">
- <button class="m" data-c="HC=1">Hovercar (педали)</button><button class="m" data-c="HC=0">Джойстик</button>
+<section class="controls-card" aria-labelledby="controlHeading">
+<div id="hcm" hidden></div>
+<h3 id="controlHeading">Управление</h3>
+<div class="control-selects">
+<label>Режим<select id="driveKind"><option value="0">Джойстик</option><option value="1">Педали</option></select></label>
+<label>Источник<select id="inputKind"><option value="0">Виртуальный</option><option value="1">Физический</option></select></label>
 </div>
-
-<h3>Джойстик</h3>
-<button id="joybtn" class="x">Джойстик: ВЫКЛ</button>
-<div style="margin-top:8px">Макс. мощность: <b id="pwrv">30</b>%<input id="pwr" type="range" min="10" max="100" step="5" value="30"></div>
-<div id="joyw"><div id="joy"><div id="knob"></div></div><div id="joyv">руль 0 · газ 0</div></div>
-
-<h3>Педали (hovercar)</h3>
+<div id="controlState" role="status" aria-live="polite">Ожидание Bluetooth-платы с прошивкой v11</div>
+<div class="control-actions"><button id="arm" disabled>Разрешить управление</button><button id="stopControl" class="x">СТОП / выключить</button></div>
+<p class="control-note">После выбора источника управление выключено. При отключении Bluetooth оно также выключается. Для включения: остановите колёса, отпустите педали или верните джойстик в центр на 0,6 с.</p>
+<label class="power-label">Ограничение тяги / руля: <b id="pwrv">30</b>%<input id="pwr" type="range" min="10" max="100" step="5" value="30"></label>
+<div id="joyPanel">
+<div id="joyw"><div id="joy" aria-label="Джойстик" role="group"><div id="knob"></div></div><div id="joyv">руль 0 · газ 0</div></div>
+<p id="joyHint" class="control-note">Удерживайте джойстик. При отпускании команда возвращается в ноль.</p>
+</div>
+<div id="virtualPedals" hidden>
+<div class="pedal-sliders">
+<label>Газ <output id="vThrText">0%</output><input id="vThr" type="range" min="0" max="1000" value="0" step="5"></label>
+<label>Тормоз <output id="vBrkText">0%</output><input id="vBrk" type="range" min="0" max="1000" value="0" step="5"></label>
+</div><p class="control-note">Удерживайте ползунок как педаль. Отпускание — возврат в ноль. Тормоз имеет приоритет над газом и не ослабляется ограничением тяги.</p>
+</div>
+<div id="physicalReadings" hidden>
 <div class="dash" style="grid-template-columns:1fr 1fr">
- <div class="c"><span>Газ</span><b id="p_thr">-</b><div class="bar"><i id="p_thrb"></i></div><span id="p_thrr"></span></div>
- <div class="c"><span>Тормоз</span><b id="p_brk">-</b><div class="bar"><i id="p_brkb" style="background:#c63"></i></div><span id="p_brkr"></span></div>
+ <div class="c"><span id="rawLabelA">Газ</span><b id="p_thr">—</b><div class="bar"><i id="p_thrb"></i></div><span id="p_thrr"></span></div>
+ <div class="c"><span id="rawLabelB">Тормоз</span><b id="p_brk">—</b><div class="bar"><i id="p_brkb" style="background:#c63"></i></div><span id="p_brkr"></span></div>
+</div><div id="p_st" style="font-size:14px;margin-top:8px"></div>
 </div>
-<div id="p_st" style="text-align:center;margin-top:6px;color:#aaa">-</div>
-<div class="g3" style="margin-top:8px">
- <button class="s" data-c="PED=1">Педали вкл</button><button class="x" data-c="PED=0">Педали выкл</button>
- <button class="m" data-c="REV">Вперёд/Назад</button>
-</div>
-<div class="g3" style="margin-top:8px">
- <button class="b" id="calstart" data-c="CAL">Калибровка</button>
- <button id="calsave" data-c="CALSAVE">Сохранить калибровку</button>
- <button class="x" data-c="CALCANCEL">Отмена</button>
-</div>
-<button class="x" style="width:100%;margin-top:8px" onclick="if(confirm('Вернуть 1.0–2.5 В по умолчанию?'))send('CALRESET')">Сбросить калибровку (1.0–2.5 В)</button>
-<div id="calbox"></div>
+<button id="reverseControl" class="m" hidden>Вперёд / назад</button>
+<details id="physicalCalibration" hidden><summary>Калибровка физических входов</summary>
+<div id="pedalCalibration" hidden>
+<p class="control-note">Нажмите «Начать», плавно нажмите обе педали до упора и отпустите. Затем сохраните. На калибровке команды моторам нулевые.</p>
+<div class="cal-actions"><button id="calstart">Начать</button><button id="calsave">Сохранить</button><button id="calcancel" class="x">Отмена</button></div>
+<div id="calbox"></div></div>
+<div id="stickCalibration" hidden>
+<p class="control-note">1. Отпустите джойстик и начните калибровку. Держите центр неподвижно около секунды.<br>2. После приглашения проведите ручку по всем краям, верните в центр и сохраните.</p>
+<div id="joyCalState" role="status">Калибровка джойстика ещё не получена</div>
+<div class="cal-actions"><button id="jcalstart">Начать</button><button id="jcalsave" disabled>Сохранить</button><button id="jcalcancel" class="x">Отмена</button></div>
+<label class="power-label">Мёртвая зона: <b id="dzText">5</b>%<input id="deadzone" type="range" min="2" max="15" step="1" value="5"></label>
+<label class="check-label"><input id="invertX" type="checkbox"> Инвертировать X — руль</label>
+<label class="check-label"><input id="invertY" type="checkbox"> Инвертировать Y — движение</label>
+<button id="saveStickConfig">Сохранить зону и инверсию</button>
+<p class="control-note">X подключается вместо газа (P0.02), Y вместо тормоза (P0.03). Питание 3,3 В, общая земля. При почти 0 В на любом входе управление блокируется, даже если это штатный край хода. Для джойстика, доходящего до 0 В, потребуется согласовать диапазон аппаратно. Два аналоговых сигнала не позволяют обнаружить все обрывы и замыкания.</p>
+</div></details>
+</section>
 
 <h3>Управление платой</h3>
 <div class="g" style="grid-template-columns:repeat(5,1fr);margin-top:8px">
@@ -239,6 +282,10 @@ function onLine(s){
   $('d_en').textContent=(st&1?'ВКЛ':'выкл')+(st&16?' 🕹':'')+(err?' E'+(err&255)+'/'+(err>>8):'')+(st&2?' TO':'');
   if(!filled){$('imax').value=Math.round(imax/10);$('nmax').value=nmax;filled=true}
   setLink(true);
+ } else if(s.startsWith('#S,')){
+  onControls(s);
+ } else if(s.startsWith('#E,')){
+  controlMessage(s);
  } else if(s.startsWith('#Q,')){
   onQuaternionLine(s);
  } else if(s.startsWith('#I,')){
@@ -252,6 +299,11 @@ function onLine(s){
 const V=r=>(r*3.6/1023).toFixed(2);
 function onPed(v){
  const [tr,br,thr,brk,flt,rev,on,tmin,tmax,bmin,bmax]=v;
+ if(control.source===1){
+  $('p_thr').textContent=V(tr)+' В';$('p_brk').textContent=V(br)+' В';
+  $('p_thrb').style.width=tr/1023*100+'%';$('p_brkb').style.width=br/1023*100+'%';
+  $('p_thrr').textContent='АЦП '+tr;$('p_brkr').textContent='АЦП '+br;$('p_st').textContent='';return;
+ }
  $('p_thr').textContent=(flt&1)?'ОБРЫВ':Math.round(thr/10)+'%';
  $('p_brk').textContent=(flt&2)?'ОБРЫВ':Math.round(brk/10)+'%';
  $('p_thrb').style.width=thr/10+'%';$('p_brkb').style.width=brk/10+'%';
@@ -263,8 +315,8 @@ function onCal(a){
  const b=$('calbox');
  if(a[0]=='1'){b.style.display='block';
   if(a.length>=7){const [tl,th,bl,bh,tn,bn]=a.slice(1).map(Number);
-   b.innerHTML='КАЛИБРОВКА: нажмите оба курка до упора и отпустите<br>Газ: '+V(tn)+' В · мин '+V(tl)+' · макс '+V(th)+'<br>Тормоз: '+V(bn)+' В · мин '+V(bl)+' · макс '+V(bh)}
-  else b.textContent='КАЛИБРОВКА: нажмите оба курка до упора и отпустите';}
+   b.innerHTML='КАЛИБРОВКА: нажмите обе педали до упора и отпустите<br>Газ: '+V(tn)+' В · мин '+V(tl)+' · макс '+V(th)+'<br>Тормоз: '+V(bn)+' В · мин '+V(bl)+' · макс '+V(bh)}
+  else b.textContent='КАЛИБРОВКА: нажмите обе педали до упора и отпустите';}
  else if(a[0]=='OK'){b.style.display='none';log('Калибровка сохранена\n')}
  else if(a[0]=='0'){b.style.display='none';log('Калибровка отменена\n')}
  else if(a[0]=='ERR'){const e=+a[1];
@@ -275,19 +327,33 @@ async function connect(){
  try{
   resetImu(); inbuf='';
   dev=await navigator.bluetooth.requestDevice({filters:[{services:[NUS]}],optionalServices:[NUS]});
-  dev.addEventListener('gattserverdisconnected',()=>{rx=null;setJoy(false);inbuf='';resetImu();setLink(false);log('[отключено]\n');$('con').textContent='Подключиться к NB-BT';rx=null});
+  dev.addEventListener('gattserverdisconnected',()=>{rx=null;disconnectControls();inbuf='';resetImu();setLink(false);log('[отключено]\n');$('con').textContent='Подключиться к NB-BT';rx=null});
   const s=await(await dev.gatt.connect()).getPrimaryService(NUS);
   rx=await s.getCharacteristic(RX);
   const tx=await s.getCharacteristic(TX);
   // Register before enabling notifications: the first notification can arrive immediately.
   tx.addEventListener('characteristicvaluechanged',e=>feedRx(e.target.value));
   await tx.startNotifications();
-  $('con').textContent='Подключено: '+dev.name;log('[подключено]\n');await send('PRAW');await send('$IMUCAL');
+  $('con').textContent='Подключено: '+dev.name;log('[подключено]\n');await send('STATE');await send('$IMUCAL');
  }catch(e){log('Ошибка: '+e+'\n')}
 }
-async function send(c){if(!rx){log('Сначала подключитесь\n');return}
- const d=new TextEncoder().encode(c);
- for(let i=0;i<d.length;i+=20)await rx.writeValueWithoutResponse(d.slice(i,i+20));}
+let txQueue=Promise.resolve(),txQueued=0,txEpoch=0;
+async function send(c){
+ if(!rx)throw new Error('Сначала подключитесь');
+ if(c==='STOP')txEpoch++;
+ const target=rx,epoch=txEpoch;txQueued++;
+ const job=txQueue.catch(()=>{}).then(async()=>{
+  if(rx!==target)throw new Error('Соединение изменилось');
+  if(epoch!==txEpoch)throw new Error('Команда отменена кнопкой СТОП');
+  const d=new TextEncoder().encode(c);
+  if(d.length>20)throw new Error('Команда длиннее 20 байт: не отправлена');
+  await target.writeValueWithoutResponse(d);
+  await new Promise(r=>setTimeout(r,30)); // nRF51 command mailbox: no overlapping writes
+ });
+ txQueue=job;
+ try{await job}finally{txQueued--}
+}
+
 function step(id,d){const e=$(id);e.value=Math.max(+e.min,Math.min(+e.max,(+e.value||0)+d))}
 // Скорость: об/мин колеса -> км/ч. Диаметр хранится в браузере (localStorage), по умолчанию 10.5"
 let wheelD=parseFloat(localStorage.getItem('wheelD'))||10.5;
@@ -380,48 +446,109 @@ resetImu();
 function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит оборотов (сохранить - кнопка «Сохранить»)
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
 
-// ---------- Джойстик ----------
-let joyOn=false,jx=0,jy=0,joyBusy=false,joyTimer=null;
+// One source selector; UI never claims a mode change until #S from BT confirms it.
+const control={source:0,pending:0,armed:false,waiting:false,error:0,valid:false,stage:0,last:0};
+let requestedSource=null,sourceRequestedAt=0,jx=0,jy=0,virtualBusy=false,localMessage='';
 const joy=$('joy'),knob=$('knob');
-$('pwr').oninput=e=>$('pwrv').textContent=e.target.value;
+const sourceNames=['Виртуальный джойстик','Физический джойстик','Виртуальные педали','Физические педали'];
+const controlErrors={1:'Нет подтверждения режима STM32. Повторите выбор источника.',2:'STM32 отклонил смену режима.',3:'Нужна остановка и калибровка входов.',4:'Физический вход вне допустимого диапазона. Проверьте подключение и верните в нейтраль.',5:'Пропали виртуальные команды. Включите управление повторно.',6:'Ошибка записи flash: настройки действуют только до перезапуска.',7:'Остановите оба колеса.'};
+function freshControls(){return control.last>0&&performance.now()-control.last<1500}
+function isVirtual(){return control.source===0||control.source===2}
+function resetInputs(){jx=jy=0;$('vThr').value=$('vBrk').value='0';updatePedalText();drawKnob()}
+function drawKnob(){const R=joy.clientWidth/2,k=knob.clientWidth/2;knob.style.left=(R-k+jx*(R-k))+'px';knob.style.top=(R-k+jy*(R-k))+'px'}
+function updatePedalText(){$('vThrText').textContent=Math.round(+$('vThr').value/10)+'%';$('vBrkText').textContent=Math.round(+$('vBrk').value/10)+'%'}
+function syncControls(){
+ const fresh=freshControls(),physical=control.source%2===1,pedals=control.source>=2;
+ $('driveKind').value=pedals?'1':'0';$('inputKind').value=physical?'1':'0';
+ for(const id of ['driveKind','inputKind'])$(id).disabled=!rx||!fresh||control.pending!==0||requestedSource!==null;
+ $('joyPanel').hidden=pedals;$('virtualPedals').hidden=!(pedals&&!physical);
+ $('physicalReadings').hidden=!physical;$('physicalCalibration').hidden=!physical;
+ $('pedalCalibration').hidden=control.source!==3;$('stickCalibration').hidden=control.source!==1;
+ $('reverseControl').hidden=!pedals;
+ $('reverseControl').disabled=!fresh||control.armed||control.waiting||control.pending!==0||control.stage!==0;
+ $('reverseControl').title='Сначала нажмите СТОП и остановите оба колеса';
+ $('rawLabelA').textContent=pedals?'Газ':'X — руль, сырой вход';$('rawLabelB').textContent=pedals?'Тормоз':'Y — движение, сырой вход';
+ $('joyHint').textContent=physical?'Положение физического джойстика. Круг на экране только показывает данные.':'Удерживайте джойстик. Отпускание — возврат команды в ноль.';
+ joy.classList.toggle('on',fresh&&control.armed&&control.source===0);
+ $('arm').disabled=!rx||!fresh||control.pending!==0||requestedSource!==null||control.stage!==0||(control.source===1&&!control.valid)||control.error===1||control.error===2;
+ $('arm').textContent=control.armed?'Управление включено':control.waiting?'Ожидание нейтрали…':'Разрешить управление';
+ $('arm').disabled=$('arm').disabled||control.armed||control.waiting;
+ $('jcalsave').disabled=control.stage!==2||!fresh;
+ for(const id of ['vThr','vBrk'])$(id).disabled=!fresh||!control.armed||control.source!==2;
+ $('pwr').disabled=!fresh||control.pending!==0;
+ let message=!rx?'Подключитесь к Bluetooth-плате.':!fresh?'Нет свежего статуса источника. Нужна прошивка BT v11.':requestedSource!==null||control.pending?'Переключение источника — управление выключено.':controlErrors[control.error]|| (control.stage===1?'Калибровка центра: отпустите ручку и не трогайте её.':control.stage===2?'Обведите все края, верните в центр и сохраните.':control.waiting?'Ожидание нейтрали 0,6 с.':control.armed?'Управление разрешено.':'Управление выключено.');
+ $('controlState').textContent=(fresh?sourceNames[control.source]+'. ':'')+message+(localMessage?' '+localMessage:'');
+ $('joyCalState').textContent=control.stage===1?'Шаг 1/2: центр, около 1 секунды стабильных измерений.':control.stage===2?'Шаг 2/2: пройдите все крайние положения и отпустите ручку.':control.valid?'Калибровка джойстика сохранена.':'Сначала откалибруйте джойстик. Управление заблокировано.';
+}
+function onControls(line){
+ const v=line.slice(3).split(',').map(Number);if(v.length!==18||!v.every(Number.isFinite)||v[0]<0||v[0]>3)return;
+ const [source,pending,armed,waiting,error,valid,stage,x,y,dead,inv,limit,...ranges]=v;
+ const sourceChanged=source!==control.source;
+ Object.assign(control,{source,pending,armed:!!armed,waiting:!!waiting,error,valid:!!valid,stage,last:performance.now()});
+ if(sourceChanged||!armed&&!waiting)resetInputs();
+ if(source===1){jx=x/1000;jy=-y/1000;drawKnob();$('joyv').textContent='руль '+x+' · движение '+y}
+ if(requestedSource===source&&pending===0){requestedSource=null;localMessage=''}
+ if(document.activeElement!==$('deadzone')){$('deadzone').value=dead;$('dzText').textContent=dead}
+ $('invertX').checked=!!(inv&1);$('invertY').checked=!!(inv&2);
+ if(document.activeElement!==$('pwr')){$('pwr').value=limit;$('pwrv').textContent=limit}
+ if(stage===0&&valid)$('joyCalState').textContent='X: '+ranges.slice(0,3).join(' / ')+' · Y: '+ranges.slice(3).join(' / ');
+ syncControls();
+}
+function controlMessage(s){
+ const errors={'#E,source,stop':'Переключение возможно только при связи со STM32 и остановленных колёсах.','#E,arm,notready':'Нужны подтверждённый источник, остановка и завершённая калибровка.','#E,cal,travel':'Недостаточный ход: пройдите обе оси в обе стороны.','#E,cal,center':'Перед сохранением отпустите джойстик в центр.','#E,config,stop':'Остановите колёса перед изменением настройки.','#E,command,disarm':'Сначала выключите управление и завершите калибровку.'};
+ localMessage=errors[s]||s;requestedSource=null;syncControls();log(localMessage+'\n');
+}
+async function guardedSend(c){try{await send(c)}catch(e){localMessage=String(e);syncControls()}}
+async function chooseSource(){
+ const wanted=+$('driveKind').value*2+(+$('inputKind').value);
+ resetInputs();localMessage='';requestedSource=wanted;sourceRequestedAt=performance.now();syncControls();
+ try{await send('STOP');await send('SRC='+wanted)}catch(e){requestedSource=null;localMessage=String(e);syncControls()}
+}
+$('driveKind').onchange=$('inputKind').onchange=chooseSource;
+$('arm').onclick=async()=>{resetInputs();await virtualTick(true);await guardedSend('ARM=1')};
+async function stopControls(){resetInputs();control.armed=false;control.waiting=false;syncControls();if(rx)await guardedSend('STOP')}
+$('stopControl').onclick=stopControls;
+function disconnectControls(){resetInputs();control.last=0;control.armed=control.waiting=false;requestedSource=null;syncControls()}
 function joyPos(e){
- const r=joy.getBoundingClientRect(),R=r.width/2;
- let x=(e.clientX-r.left-R)/R,y=(e.clientY-r.top-R)/R;
- const d=Math.hypot(x,y);if(d>1){x/=d;y/=d}
- jx=x;jy=y;drawKnob();
+ if(control.source!==0||!control.armed||!freshControls())return;
+ const r=joy.getBoundingClientRect(),R=r.width/2;let x=(e.clientX-r.left-R)/R,y=(e.clientY-r.top-R)/R;
+ const d=Math.hypot(x,y);if(d>1){x/=d;y/=d}jx=x;jy=y;drawKnob();
 }
-function drawKnob(){
- const R=joy.clientWidth/2,k=knob.clientWidth/2;
- knob.style.left=(R-k+jx*(R-k))+'px';knob.style.top=(R-k+jy*(R-k))+'px';
-}
-joy.addEventListener('pointerdown',e=>{joy.setPointerCapture(e.pointerId);joyPos(e)});
+joy.addEventListener('pointerdown',e=>{if(control.source===0&&control.armed){joy.setPointerCapture(e.pointerId);joyPos(e)}});
 joy.addEventListener('pointermove',e=>{if(joy.hasPointerCapture(e.pointerId))joyPos(e)});
-const release=()=>{jx=0;jy=0;drawKnob()};
-joy.addEventListener('pointerup',release);joy.addEventListener('pointercancel',release);joy.addEventListener('lostpointercapture',release);
-function joyVals(){
- const k=+$('pwr').value*10,dz=v=>Math.abs(v)<0.06?0:v;
- return [Math.round(dz(jx)*k),Math.round(-dz(jy)*k)];   // руль, газ
+function releaseStick(){if(control.source!==1){jx=jy=0;drawKnob()}}
+for(const event of ['pointerup','pointercancel','lostpointercapture'])joy.addEventListener(event,releaseStick);
+for(const id of ['vThr','vBrk']){
+ const el=$(id);el.oninput=updatePedalText;
+ const release=()=>{el.value=0;updatePedalText()};
+ for(const event of ['pointerup','pointercancel','keyup','blur'])el.addEventListener(event,release);
 }
-async function joyTick(){
- const [st,sp]=joyVals();
- $('joyv').textContent='руль '+st+' · газ '+sp;
- if(!rx||joyBusy)return;
- joyBusy=true;
- try{await rx.writeValueWithoutResponse(new TextEncoder().encode('J,'+st+','+sp))}catch(e){}
- joyBusy=false;
+async function virtualTick(force=false){
+ if(!rx||!freshControls()||!isVirtual()||virtualBusy||txQueued>0||control.pending||requestedSource!==null)return;
+ if(!force&&document.hidden)return;
+ let a=0,b=0;
+ if(control.source===0){const dz=v=>Math.abs(v)<.05?0:v;a=Math.round(dz(jx)*1000);b=Math.round(-dz(jy)*1000);$('joyv').textContent='руль '+a+' · газ '+b}
+ else{a=+$('vBrk').value;b=a>30?0:+$('vThr').value}
+ if(!control.armed&&!control.waiting)a=b=0;
+ virtualBusy=true;
+ try{await send((control.source===0?'J,':'P,')+a+','+b)}catch(e){}finally{virtualBusy=false}
 }
-function setJoy(on){
- joyOn=on;release();
- $('joybtn').textContent='Джойстик: '+(on?'ВКЛ':'ВЫКЛ');$('joybtn').className=on?'':'x';
- joy.classList.toggle('on',on);
- clearInterval(joyTimer);
- if(on)joyTimer=setInterval(joyTick,50);   // 20 раз в секунду; перестанет слать - плата остановится через 0,3 с
- else{jx=jy=0;joyTick()}
-}
-$('joybtn').onclick=()=>setJoy(!joyOn);
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&joyOn)setJoy(false)});
+setInterval(()=>{virtualTick();if(requestedSource!==null&&performance.now()-sourceRequestedAt>4000){requestedSource=null;localMessage='Нет подтверждения выбора. Нажмите СТОП и повторите.'}
+ if(control.last&&!freshControls()&&(control.armed||control.waiting))stopControls();syncControls()},100);
+$('pwr').oninput=e=>$('pwrv').textContent=e.target.value;
+$('pwr').onchange=()=>guardedSend('LIMIT='+$('pwr').value);
+$('deadzone').oninput=e=>$('dzText').textContent=e.target.value;
+$('deadzone').onchange=()=>guardedSend('DZ='+$('deadzone').value);
+$('invertX').onchange=$('invertY').onchange=()=>guardedSend('INV='+(($('invertX').checked?1:0)|($('invertY').checked?2:0)));
+$('saveStickConfig').onclick=()=>guardedSend('JCONFIGSAVE');
+for(const [id,c] of [['jcalstart','JCAL'],['jcalsave','JSAVE'],['jcalcancel','JCANCEL'],['calstart','CAL'],['calsave','CALSAVE'],['calcancel','CALCANCEL'],['reverseControl','REV']])$(id).onclick=()=>guardedSend(c);
+for(const event of ['pointerup','pointercancel'])window.addEventListener(event,()=>{if(control.source===2){$('vThr').value=$('vBrk').value='0';updatePedalText()}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&isVirtual())stopControls()});
+window.addEventListener('blur',()=>{if(isVirtual())stopControls()});
 $('con').onclick=connect;
-document.querySelectorAll('button[data-c]').forEach(b=>b.onclick=()=>send(b.dataset.c));
-$('cmd').onkeydown=e=>{if(e.key==='Enter'){send(e.target.value);e.target.value=''}};
+document.querySelectorAll('button[data-c]').forEach(b=>b.onclick=()=>guardedSend(b.dataset.c));
+$('cmd').onkeydown=e=>{if(e.key==='Enter'){guardedSend(e.target.value);e.target.value=''}};
+syncControls();drawKnob();
 if(!navigator.bluetooth)log('Web Bluetooth недоступен: откройте в Bluefy (iPhone) или Chrome (Android)\n');
+
 </script></body></html>
