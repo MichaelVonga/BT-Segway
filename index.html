@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт v11 — ориентация на STM32</title>
+<title>NB-BT пульт v11.1 — ориентация на STM32</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -159,7 +159,7 @@
 <label for="axisMap">Монтаж: поворот датчика вокруг Z относительно модели</label>
 <select id="axisMap"><option value="0">0°: X вправо, Y к верхнему краю модели</option><option value="90">+90°: X к верхнему краю, Y влево</option><option value="180">180°: X влево, Y к нижнему краю</option><option value="270">270°: X к нижнему краю, Y вправо</option></select>
 <p>Ориентация рассчитывается на STM32 по акселерометру и гироскопу. Страница отображает готовый кватернион; отдельного переключателя слияния больше нет.</p>
-<p>При запуске платы и после подключения начинается автокалибровка. Оставьте плату неподвижной примерно на 4 секунды в любом положении, без вибраций. При движении окно измерений начинается заново. Медленное равномерное вращение может быть принято за смещение нуля. В STM32 v10.5 предел сырых показаний до вычитания нуля — 30°/с по модулю вектора; проверки стабильности сохранены.</p>
+<p>При запуске платы начинается автокалибровка. Повторную калибровку с этой страницы запускайте только после СТОП. Оставьте плату неподвижной примерно на 4 секунды в любом положении, без вибраций. При движении окно измерений начинается заново. Медленное равномерное вращение может быть принято за смещение нуля. В STM32 v10.5 предел сырых показаний до вычитания нуля — 30°/с по модулю вектора; проверки стабильности сохранены.</p>
 <div class="imu-actions"><button id="gyroZeroBtn" class="s" type="button">Калибровать гироскоп</button></div>
 <p id="gyroZeroStatus" role="status">Ожидание подключения.</p>
 <p>gx/gy/gz — скорость с вычтенным нулём после калибровки. Курс относительный: без магнитометра остаточный дрейф возможен. Кнопка ниже задаёт нулевой курс только для модели, не меняя наклон и прошивку.</p>
@@ -190,9 +190,10 @@
 <label>Режим<select id="driveKind"><option value="0">Джойстик</option><option value="1">Педали</option></select></label>
 <label>Источник<select id="inputKind"><option value="0">Виртуальный</option><option value="1">Физический</option></select></label>
 </div>
-<div id="controlState" role="status" aria-live="polite">Ожидание Bluetooth-платы с прошивкой v11</div>
+<div id="controlState" role="status" aria-live="polite">Ожидание Bluetooth-платы с прошивкой v11.1</div>
+<button id="autoPhysical" class="s" style="width:100%;margin-bottom:12px">Автоопределить физические входы</button>
 <div class="control-actions"><button id="arm" disabled>Разрешить управление</button><button id="stopControl" class="x">СТОП / выключить</button></div>
-<p class="control-note">После выбора источника управление выключено. При отключении Bluetooth оно также выключается. Для включения: остановите колёса, отпустите педали или верните джойстик в центр на 0,6 с.</p>
+<p class="control-note">Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения.<br>Bluetooth не нужен для физических входов. Виртуальные включаются кнопкой и выключаются при потере связи. СТОП защёлкивает остановку для всех источников.</p>
 <label class="power-label">Ограничение тяги / руля: <b id="pwrv">30</b>%<input id="pwr" type="range" min="10" max="100" step="5" value="30"></label>
 <div id="joyPanel">
 <div id="joyw"><div id="joy" aria-label="Джойстик" role="group"><div id="knob"></div></div><div id="joyv">руль 0 · газ 0</div></div>
@@ -220,7 +221,7 @@
 <p class="control-note">1. Отпустите джойстик и начните калибровку. Держите центр неподвижно около секунды.<br>2. После приглашения проведите ручку по всем краям, верните в центр и сохраните.</p>
 <div id="joyCalState" role="status">Калибровка джойстика ещё не получена</div>
 <div class="cal-actions"><button id="jcalstart">Начать</button><button id="jcalsave" disabled>Сохранить</button><button id="jcalcancel" class="x">Отмена</button></div>
-<label class="power-label">Мёртвая зона: <b id="dzText">5</b>%<input id="deadzone" type="range" min="2" max="15" step="1" value="5"></label>
+<label class="power-label">Мёртвая зона: <b id="dzText">5</b>%<input id="deadzone" type="range" min="2" max="20" step="1" value="5"></label>
 <label class="check-label"><input id="invertX" type="checkbox"> Инвертировать X — руль</label>
 <label class="check-label"><input id="invertY" type="checkbox"> Инвертировать Y — движение</label>
 <button id="saveStickConfig">Сохранить зону и инверсию</button>
@@ -282,6 +283,8 @@ function onLine(s){
   $('d_en').textContent=(st&1?'ВКЛ':'выкл')+(st&16?' 🕹':'')+(err?' E'+(err&255)+'/'+(err>>8):'')+(st&2?' TO':'');
   if(!filled){$('imax').value=Math.round(imax/10);$('nmax').value=nmax;filled=true}
   setLink(true);
+ } else if(s.startsWith('#D,')){
+  onAutoStatus(s);
  } else if(s.startsWith('#S,')){
   onControls(s);
  } else if(s.startsWith('#E,')){
@@ -299,7 +302,7 @@ function onLine(s){
 const V=r=>(r*3.6/1023).toFixed(2);
 function onPed(v){
  const [tr,br,thr,brk,flt,rev,on,tmin,tmax,bmin,bmax]=v;
- if(control.source===1){
+ if(control.source===1||controlAuto.detect){
   $('p_thr').textContent=V(tr)+' В';$('p_brk').textContent=V(br)+' В';
   $('p_thrb').style.width=tr/1023*100+'%';$('p_brkb').style.width=br/1023*100+'%';
   $('p_thrr').textContent='АЦП '+tr;$('p_brkr').textContent='АЦП '+br;$('p_st').textContent='';return;
@@ -334,7 +337,7 @@ async function connect(){
   // Register before enabling notifications: the first notification can arrive immediately.
   tx.addEventListener('characteristicvaluechanged',e=>feedRx(e.target.value));
   await tx.startNotifications();
-  $('con').textContent='Подключено: '+dev.name;log('[подключено]\n');await send('STATE');await send('$IMUCAL');
+  $('con').textContent='Подключено: '+dev.name;log('[подключено]\n');await send('STATE');
  }catch(e){log('Ошибка: '+e+'\n')}
 }
 let txQueue=Promise.resolve(),txQueued=0,txEpoch=0;
@@ -447,6 +450,7 @@ function nq(n){$('nmax').value=n;send('NMAX='+n)}   // быстрый лимит
 function setv(cmd,id){const v=$(id).value;if(v!=='')send(cmd+'='+v)}
 
 // One source selector; UI never claims a mode change until #S from BT confirms it.
+const controlAuto={known:false,detect:false,allowed:false,pedalValid:false,defaultJoy:true};
 const control={source:0,pending:0,armed:false,waiting:false,error:0,valid:false,stage:0,last:0};
 let requestedSource=null,sourceRequestedAt=0,jx=0,jy=0,virtualBusy=false,localMessage='';
 const joy=$('joy'),knob=$('knob');
@@ -462,23 +466,32 @@ function syncControls(){
  $('driveKind').value=pedals?'1':'0';$('inputKind').value=physical?'1':'0';
  for(const id of ['driveKind','inputKind'])$(id).disabled=!rx||!fresh||control.pending!==0||requestedSource!==null;
  $('joyPanel').hidden=pedals;$('virtualPedals').hidden=!(pedals&&!physical);
- $('physicalReadings').hidden=!physical;$('physicalCalibration').hidden=!physical;
+ $('physicalReadings').hidden=!physical;$('physicalCalibration').hidden=!physical||controlAuto.detect;
  $('pedalCalibration').hidden=control.source!==3;$('stickCalibration').hidden=control.source!==1;
- $('reverseControl').hidden=!pedals;
+ $('reverseControl').hidden=!pedals||controlAuto.detect;
  $('reverseControl').disabled=!fresh||control.armed||control.waiting||control.pending!==0||control.stage!==0;
  $('reverseControl').title='Сначала нажмите СТОП и остановите оба колеса';
  $('rawLabelA').textContent=pedals?'Газ':'X — руль, сырой вход';$('rawLabelB').textContent=pedals?'Тормоз':'Y — движение, сырой вход';
  $('joyHint').textContent=physical?'Положение физического джойстика. Круг на экране только показывает данные.':'Удерживайте джойстик. Отпускание — возврат команды в ноль.';
  joy.classList.toggle('on',fresh&&control.armed&&control.source===0);
- $('arm').disabled=!rx||!fresh||control.pending!==0||requestedSource!==null||control.stage!==0||(control.source===1&&!control.valid)||control.error===1||control.error===2;
- $('arm').textContent=control.armed?'Управление включено':control.waiting?'Ожидание нейтрали…':'Разрешить управление';
+ $('autoPhysical').disabled=!rx||!fresh||control.pending!==0||control.armed||control.waiting;
+ $('arm').hidden=physical&&(controlAuto.detect||controlAuto.allowed);
+ document.querySelector('.control-actions').style.gridTemplateColumns=$('arm').hidden?'1fr':'repeat(2,minmax(0,1fr))';
+ $('arm').disabled=!rx||!fresh||control.pending!==0||requestedSource!==null||control.stage!==0||control.error===1||control.error===2;
+ $('arm').textContent=control.armed?'Управление включено':control.waiting?'Ожидание нейтрали…':physical?'Возобновить после СТОП':'Разрешить управление';
  $('arm').disabled=$('arm').disabled||control.armed||control.waiting;
  $('jcalsave').disabled=control.stage!==2||!fresh;
  for(const id of ['vThr','vBrk'])$(id).disabled=!fresh||!control.armed||control.source!==2;
  $('pwr').disabled=!fresh||control.pending!==0;
- let message=!rx?'Подключитесь к Bluetooth-плате.':!fresh?'Нет свежего статуса источника. Нужна прошивка BT v11.':requestedSource!==null||control.pending?'Переключение источника — управление выключено.':controlErrors[control.error]|| (control.stage===1?'Калибровка центра: отпустите ручку и не трогайте её.':control.stage===2?'Обведите все края, верните в центр и сохраните.':control.waiting?'Ожидание нейтрали 0,6 с.':control.armed?'Управление разрешено.':'Управление выключено.');
- $('controlState').textContent=(fresh?sourceNames[control.source]+'. ':'')+message+(localMessage?' '+localMessage:'');
- $('joyCalState').textContent=control.stage===1?'Шаг 1/2: центр, около 1 секунды стабильных измерений.':control.stage===2?'Шаг 2/2: пройдите все крайние положения и отпустите ручку.':control.valid?'Калибровка джойстика сохранена.':'Сначала откалибруйте джойстик. Управление заблокировано.';
+ let message=!rx?'Подключитесь к Bluetooth-плате.':!fresh?'Нет свежего статуса источника. Нужна прошивка BT v11.1.':requestedSource!==null||control.pending?'Переключение источника — управление выключено.':controlErrors[control.error]|| (control.stage===1?'Калибровка центра: отпустите ручку и не трогайте её.':control.stage===2?'Обведите все края, верните в центр и сохраните.':control.waiting?'Ожидание нейтрали 0,6 с.':control.armed?'Управление разрешено.':'Управление выключено.');
+ if(rx&&fresh&&controlAuto.detect)message='Автоопределение: отпустите оба входа. Ожидаются стабильные напряжения около 0,8 В (педали) или 1,65 В (джойстик).';
+ else if(rx&&fresh&&physical&&controlAuto.allowed&&!control.pending&&!control.error&&!control.stage&&!control.armed)message='Автозапуск: верните входы в нейтраль и остановите колёса.';
+ $('controlState').textContent=(fresh?(controlAuto.detect?'Тип ещё не определён':sourceNames[control.source])+'. ':'')+message+(localMessage?' '+localMessage:'');
+ $('joyCalState').textContent=control.stage===1?'Шаг 1/2: центр, около 1 секунды стабильных измерений.':control.stage===2?'Шаг 2/2: пройдите все крайние положения и отпустите ручку.':control.valid?'Калибровка джойстика сохранена.':'До первой калибровки: центр около 1,65 В, диапазон 0–3,3 В, мёртвая зона 20%. Уточните диапазон калибровкой.';
+}
+function onAutoStatus(line){
+ const v=line.slice(3).split(',').map(Number);if(v.length!==4||!v.every(x=>x===0||x===1))return;
+ Object.assign(controlAuto,{known:true,detect:!!v[0],allowed:!!v[1],pedalValid:!!v[2],defaultJoy:!!v[3]});syncControls();
 }
 function onControls(line){
  const v=line.slice(3).split(',').map(Number);if(v.length!==18||!v.every(Number.isFinite)||v[0]<0||v[0]>3)return;
@@ -508,7 +521,8 @@ $('driveKind').onchange=$('inputKind').onchange=chooseSource;
 $('arm').onclick=async()=>{resetInputs();await virtualTick(true);await guardedSend('ARM=1')};
 async function stopControls(){resetInputs();control.armed=false;control.waiting=false;syncControls();if(rx)await guardedSend('STOP')}
 $('stopControl').onclick=stopControls;
-function disconnectControls(){resetInputs();control.last=0;control.armed=control.waiting=false;requestedSource=null;syncControls()}
+$('autoPhysical').onclick=async()=>{resetInputs();await guardedSend('AUTO')};
+function disconnectControls(){resetInputs();control.last=0;control.armed=control.waiting=false;requestedSource=null;controlAuto.known=false;controlAuto.detect=false;controlAuto.allowed=false;syncControls()}
 function joyPos(e){
  if(control.source!==0||!control.armed||!freshControls())return;
  const r=joy.getBoundingClientRect(),R=r.width/2;let x=(e.clientX-r.left-R)/R,y=(e.clientY-r.top-R)/R;
@@ -534,7 +548,7 @@ async function virtualTick(force=false){
  try{await send((control.source===0?'J,':'P,')+a+','+b)}catch(e){}finally{virtualBusy=false}
 }
 setInterval(()=>{virtualTick();if(requestedSource!==null&&performance.now()-sourceRequestedAt>4000){requestedSource=null;localMessage='Нет подтверждения выбора. Нажмите СТОП и повторите.'}
- if(control.last&&!freshControls()&&(control.armed||control.waiting))stopControls();syncControls()},100);
+ if(control.last&&!freshControls()&&isVirtual()&&(control.armed||control.waiting))stopControls();syncControls()},100);
 $('pwr').oninput=e=>$('pwrv').textContent=e.target.value;
 $('pwr').onchange=()=>guardedSend('LIMIT='+$('pwr').value);
 $('deadzone').oninput=e=>$('dzText').textContent=e.target.value;
@@ -543,8 +557,8 @@ $('invertX').onchange=$('invertY').onchange=()=>guardedSend('INV='+(($('invertX'
 $('saveStickConfig').onclick=()=>guardedSend('JCONFIGSAVE');
 for(const [id,c] of [['jcalstart','JCAL'],['jcalsave','JSAVE'],['jcalcancel','JCANCEL'],['calstart','CAL'],['calsave','CALSAVE'],['calcancel','CALCANCEL'],['reverseControl','REV']])$(id).onclick=()=>guardedSend(c);
 for(const event of ['pointerup','pointercancel'])window.addEventListener(event,()=>{if(control.source===2){$('vThr').value=$('vBrk').value='0';updatePedalText()}});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&isVirtual())stopControls()});
-window.addEventListener('blur',()=>{if(isVirtual())stopControls()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&freshControls()&&isVirtual()&&(control.armed||control.waiting))stopControls()});
+window.addEventListener('blur',()=>{if(freshControls()&&isVirtual()&&(control.armed||control.waiting))stopControls()});
 $('con').onclick=connect;
 document.querySelectorAll('button[data-c]').forEach(b=>b.onclick=()=>guardedSend(b.dataset.c));
 $('cmd').onkeydown=e=>{if(e.key==='Enter'){guardedSend(e.target.value);e.target.value=''}};
