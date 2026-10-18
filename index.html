@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8">
-<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<meta name="nb-offline-version" content="web-11.4-offline-1">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт v11.2 — ориентация на STM32</title>
+<title>NB-BT пульт v11.4 офлайн — ориентация на STM32</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -88,7 +88,16 @@
 #reverseControl,#saveStickConfig{width:100%;min-height:44px;margin-top:12px}
 #joy{touch-action:none}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #88bfff;outline-offset:3px}
 @media(max-width:420px){.controls-card{padding:12px}.control-selects,.control-actions{gap:8px}.cal-actions{grid-template-columns:1fr}.control-actions button{font-size:14px}}
+
+#offlineBadge{margin:0 0 8px;font-size:14px;line-height:1.5;color:#c3c3c3}
+#offlineBadge[data-state=ready]{color:#8cdeb0}
+#offlineBadge[data-state=error],#offlineBadge[data-state=unsupported]{color:#ffd296}
+#offlinePanel{margin:24px 0 12px;padding:16px;background:#191919;border:1px solid #444;border-radius:10px}
+#offlinePanel h3{margin:0 0 12px;font-size:20px}
+#offlinePanel p{font-size:14px;line-height:1.6;overflow-wrap:anywhere;color:#ddd}
+#offlineSave{width:100%;min-height:48px;background:#197246;padding:12px;font-size:16px}
 </style></head><body>
+<p id="offlineBadge" role="status">Офлайн: проверка…</p>
 <button id="con">Подключиться к NB-BT</button>
 <div id="board3d">
  <div style="-webkit-transform-style:preserve-3d;transform-style:preserve-3d;-webkit-transform:none;transform:none">
@@ -260,6 +269,13 @@
 
 <input id="cmd" style="margin-top:10px" placeholder="Команда, Enter (например $SET N_MOT_MAX 500)">
 <div id="log"></div>
+<section id="offlinePanel" aria-labelledby="offlineHeading" data-state="checking">
+<h3 id="offlineHeading">Работа без интернета</h3>
+<p id="offlineStatus" role="status">Для первого сохранения откройте страницу с интернетом в Bluefy.</p>
+<button id="offlineSave" type="button">Проверить / сохранить офлайн</button>
+<p>Используйте тот же адрес GitHub Pages. Bluetooth нужен, интернет после сохранения — нет. Проверка: остановите управление, отключите Wi-Fi и мобильные данные, оставьте Bluetooth включённым, закройте и снова откройте Bluefy и эту закладку.</p>
+<p>Кэш браузера может быть удалён системой или при очистке данных. Перед поездкой проверяйте реальное открытие без сети. Обновление не перезагружает открытый пульт автоматически.</p>
+</section>
 <script>
 const NUS='6e400001-b5a3-f393-e0a9-e50e24dcca9e',RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e',TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 const TYP=['COM','SIN','FOC'],MOD=['OPEN','VLT','SPD','TRQ'];
@@ -565,5 +581,81 @@ document.querySelectorAll('button[data-c]').forEach(b=>b.onclick=()=>guardedSend
 $('cmd').onkeydown=e=>{if(e.key==='Enter'){guardedSend(e.target.value);e.target.value=''}};
 syncControls();drawKnob();
 if(!navigator.bluetooth)log('Web Bluetooth недоступен: откройте в Bluefy (iPhone) или Chrome (Android)\n');
+
+</script>
+<script>
+// Offline shell only. No Bluetooth, motor command or page-reload calls here.
+const OFFLINE_VERSION = 'web-11.4-offline-1';
+let offlineRegistration = null, offlineBusy = false;
+function offlineDisplay(state, message, badge) {
+ const panel = document.getElementById('offlinePanel');
+ panel.dataset.state = state;
+ document.getElementById('offlineStatus').textContent = message;
+ document.getElementById('offlineBadge').textContent = badge;
+ document.getElementById('offlineBadge').dataset.state = state;
+}
+function offlineWorkerStatus(worker, type='NB_OFFLINE_STATUS') {
+ return new Promise((resolve, reject) => {
+  if (!worker) return reject(new Error('Нет активного офлайн-обработчика'));
+  const channel = new MessageChannel();
+  const timer = setTimeout(() => {channel.port1.close(); reject(new Error('Нет ответа от офлайн-обработчика'));}, 5000);
+  channel.port1.onmessage = event => {
+   clearTimeout(timer);channel.port1.close();
+   if (event.data && event.data.type === 'NB_OFFLINE_STATUS') resolve(event.data);
+   else reject(new Error('Неверный ответ офлайн-обработчика'));
+  };
+  worker.postMessage({type}, [channel.port2]);
+ });
+}
+async function offlineShowRegistration(registration) {
+ const worker = registration.active || navigator.serviceWorker.controller;
+ let status = await offlineWorkerStatus(worker);
+ if (!status.cached) status = await offlineWorkerStatus(worker, 'NB_OFFLINE_SAVE');
+ if (!status.cached) throw new Error('Сохранённая страница не найдена. Подключите интернет и повторите сохранение.');
+ const pending = !!registration.waiting || status.version !== OFFLINE_VERSION;
+ offlineDisplay('ready', pending
+  ? 'Офлайн-копия сохранена. Обновление ожидает закрытия вкладок с этим пультом. Сначала остановите управление, затем закройте все его вкладки и откройте страницу снова.'
+  : 'Офлайн-копия сохранена и проверена. Открывайте в Bluefy тот же адрес или закладку. После очистки данных браузера сохранение нужно повторить.',
+  pending ? 'Офлайн-копия готова · есть обновление' : 'Офлайн-копия готова');
+}
+function offlineWatch(registration) {
+ registration.addEventListener('updatefound', () => {
+  const installing = registration.installing;
+  if (!installing) return;
+  installing.addEventListener('statechange', () => {
+   if (installing.state === 'installed' && registration.active) offlineShowRegistration(registration).catch(() => {});
+  });
+ });
+}
+async function saveOffline() {
+ if (offlineBusy) return;
+ if (!window.isSecureContext || !('serviceWorker' in navigator)) {
+  offlineDisplay('unsupported', 'Этот браузер или способ открытия не предоставляет Service Worker. Откройте HTTPS-адрес GitHub Pages в Bluefy. Если сообщение остаётся, офлайн-режим таким способом в вашей версии Bluefy недоступен.', 'Офлайн: поддержка не обнаружена');
+  return;
+ }
+ offlineBusy = true;
+ const button = document.getElementById('offlineSave');button.disabled = true;
+ offlineDisplay('checking', 'Проверяю сохранённую копию. Для первого сохранения нужен интернет.', 'Офлайн: проверка…');
+ try {
+  offlineRegistration = await navigator.serviceWorker.register('./sw.js', {scope:'./', updateViaCache:'none'});
+  offlineWatch(offlineRegistration);
+  let timer;
+  try {
+   await Promise.race([navigator.serviceWorker.ready, new Promise((_, reject) => {timer=setTimeout(() => reject(new Error('Офлайн-обработчик не активировался. Проверьте наличие sw.js рядом с index.html.')), 15000);})]);
+  } finally {clearTimeout(timer);}
+  await offlineShowRegistration(offlineRegistration);
+ } catch (error) {
+  // An installed worker and its cache can remain usable while the network is down.
+  try {
+   const existing = await navigator.serviceWorker.getRegistration('./');
+   if (!existing || !existing.active) throw error;
+   offlineRegistration = existing;await offlineShowRegistration(existing);
+  } catch (fallbackError) {
+   offlineDisplay('error', 'Офлайн-копия не подтверждена. ' + (fallbackError.message || String(fallbackError)) + ' Проверьте интернет, HTTPS и загрузку обоих файлов на GitHub Pages.', 'Офлайн-копия не готова');
+  }
+ } finally {offlineBusy=false;button.disabled=false;}
+}
+document.getElementById('offlineSave').addEventListener('click', saveOffline);
+saveOffline();
 
 </script></body></html>
