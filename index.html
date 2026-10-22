@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт v11.6 — PC2 АЦП и HX711</title>
+<title>NB-BT пульт v11.7 — PC9 ошибки и HX711</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -178,8 +178,9 @@
  <div class="c"><span>PC13 — HX711, отсчёт</span><b id="g_pc13">-</b></div>
 </div>
 <p id="pc2Volts" style="font-size:14px">PC2: нет данных</p>
+<p id="pc2InputVolts" style="font-size:14px">До делителя PC2: нет данных</p>
 <p id="sensorState" role="status" style="font-size:14px">HX711: ожидание данных</p>
-<p id="g_note" style="font-size:13px;line-height:1.5;color:#aaa">PC2 — АЦП STM32; напряжение приблизительное при VDDA=3,3 В. HX711 — знаковый 24-битный отсчёт канала A, усиление 128; это не килограммы. PC9 тактирует HX711, независимое мигание его светодиода отключено. PA15 сохраняет индикацию ошибок. Датчики только отображаются и не управляют моторами.</p>
+<p id="g_note" style="font-size:13px;line-height:1.5;color:#aaa">PC2 — АЦП STM32; напряжения приблизительные при VDDA=3,3 В. До делителя: напряжение PC2 ×1,5 (10 кОм сверху, 20 кОм к земле). HX711 — знаковый 24-битный отсчёт канала A, усиление 128; это не килограммы. При ошибке PC9 показывает прежний код миганием, чтение HX711 приостановлено. После ошибки — перезапуск и восстановление показаний. PA15 сохраняет индикацию ошибок. Датчики только отображаются и не управляют моторами.</p>
 
 <div id="link">Плата сигвея: нет данных</div>
 
@@ -334,10 +335,12 @@ function onGpio(v){
  $('g_pa12').textContent=s(2);
  // PC2/HX711 are updated only by versioned numeric #N telemetry.
 }
+const PC2_VDDA=3.3, PC2_DIVIDER_GAIN=1.5;
 let sensorLast=0;
 function resetSensors(){
  $('g_pc2').textContent='нет данных';$('g_pc13').textContent='нет данных';
  $('pc2Volts').textContent='PC2: нет свежих данных';
+ $('pc2InputVolts').textContent='До делителя PC2: нет свежих данных';
  $('sensorState').textContent='HX711: нет свежих данных';
 }
 setInterval(()=>{if(!sensorLast || Date.now()-sensorLast>1500)resetSensors()},500);
@@ -346,10 +349,24 @@ function onSensorLine(line){
  if(a.length!==6 || a.some(x=>!/^[-]?\d+$/.test(x)))return false;
  const v=a.map(Number);if(!v.every(Number.isSafeInteger))return false;
  const [version,flags,pc2,hx,seq,age]=v;
- if(version!==1 || flags<0 || flags>31 || pc2<0 || pc2>4095 || hx< -8388608 || hx>8388607 || seq<0 || seq>65535 || age<0 || age>65535)return false;
+ if(version!==2 || flags<0 || flags>65535 || (flags&128) || (flags>>>8)>10 || (flags>>>8)===1 || pc2<0 || pc2>4095 || hx< -8388608 || hx>8388607 || seq<0 || seq>65535 || age<0 || age>65535)return false;
+ if(Boolean(flags&32)!==Boolean(flags>>>8))return false;
+ if((flags&32)&&(flags&(2|4|8|64)))return false;
+ if((flags&64)&&(flags&2))return false;
  sensorLast=Date.now();
  $('g_pc2').textContent=(flags&1)?String(pc2):'нет данных';
- $('pc2Volts').textContent=(flags&1)?'PC2: ≈ '+(pc2*3.3/4095).toFixed(3)+' В (VDDA принято 3,3 В)':((flags&16)?'PC2: ошибка АЦП':'PC2: ожидание АЦП');
+ $('pc2Volts').textContent=(flags&1)?'PC2: ≈ '+(pc2*PC2_VDDA/4095).toFixed(3)+' В (VDDA принято 3,3 В)':((flags&16)?'PC2: ошибка АЦП':'PC2: ожидание АЦП');
+ $('pc2InputVolts').textContent=(flags&1)?'До делителя PC2: ≈ '+(pc2*PC2_VDDA/4095*PC2_DIVIDER_GAIN).toFixed(3)+' В (×1,5)':'До делителя PC2: нет данных';
+ if(flags&32){
+  $('g_pc13').textContent='пауза';
+  $('sensorState').textContent='HX711: измерение приостановлено — PC9 показывает код ошибки '+(flags>>>8);
+  return true;
+ }
+ if(flags&64){
+  $('g_pc13').textContent='ожидание';
+  $('sensorState').textContent='HX711: восстановление после запуска/ошибки, ожидание свежего измерения';
+  return true;
+ }
  const valid=Boolean((flags&2) && !(flags&4) && age<=1500);
  $('g_pc13').textContent=valid?String(hx):'нет данных';
  $('sensorState').textContent=valid?('HX711: канал A ×128 · возраст '+age+' мс · №'+seq+((flags&8)?' · ПРЕДЕЛ ДИАПАЗОНА':'')):((flags&4)||age>1500?'HX711: нет готовых данных / таймаут':'HX711: запуск, ожидание преобразования');
