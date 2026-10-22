@@ -2,7 +2,7 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт v11.4 GPIO — ориентация на STM32</title>
+<title>NB-BT пульт v11.6 — PC2 АЦП и HX711</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -165,21 +165,23 @@
 <p>gx/gy/gz — скорость с вычтенным нулём после калибровки. Курс относительный: без магнитометра остаточный дрейф возможен. Кнопка ниже задаёт нулевой курс только для модели, не меняя наклон и прошивку.</p>
 <div class="imu-actions"><button id="imuReset" class="s" type="button">Обнулить курс модели</button></div>
 </div></details>
-<div id="link">Плата сигвея: нет данных</div>
-
 <h3>GPIO / датчики</h3>
 <div class="g3" style="grid-template-columns:1.2fr 1fr 1fr">
  <button id="pc12on" class="s" type="button">PC12 подсветка ВКЛ</button>
  <button id="pc12off" class="x" type="button">PC12 подсветка ВЫКЛ</button>
  <div class="c"><span>PC12</span><b id="g_pc12">-</b></div>
 </div>
-<div class="dash" style="grid-template-columns:repeat(4,1fr);margin-top:8px">
+<div class="dash" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px">
  <div class="c"><span>PA11</span><b id="g_pa11">-</b></div>
  <div class="c"><span>PA12</span><b id="g_pa12">-</b></div>
- <div class="c"><span>PC2</span><b id="g_pc2">-</b></div>
- <div class="c"><span>PC13</span><b id="g_pc13">-</b></div>
+ <div class="c"><span>PC2 — АЦП 0–4095</span><b id="g_pc2">-</b></div>
+ <div class="c"><span>PC13 — HX711, отсчёт</span><b id="g_pc13">-</b></div>
 </div>
-<p id="g_note" style="font-size:13px;line-height:1.4;color:#aaa;margin:8px 0 0">Показываются сырые логические уровни. PC2 — только цифровой уровень, не угол наклона. PC13 — только уровень входа; если это DOUT HX711, для чтения АЦП нужна также линия SCK. Вес не измеряется.</p>
+<p id="pc2Volts" style="font-size:14px">PC2: нет данных</p>
+<p id="sensorState" role="status" style="font-size:14px">HX711: ожидание данных</p>
+<p id="g_note" style="font-size:13px;line-height:1.5;color:#aaa">PC2 — АЦП STM32; напряжение приблизительное при VDDA=3,3 В. HX711 — знаковый 24-битный отсчёт канала A, усиление 128; это не килограммы. PC9 тактирует HX711, независимое мигание его светодиода отключено. PA15 сохраняет индикацию ошибок. Датчики только отображаются и не управляют моторами.</p>
+
+<div id="link">Плата сигвея: нет данных</div>
 
 <div class="dash">
  <div class="c"><span>Режим</span><b id="d_mode">-</b></div>
@@ -307,6 +309,7 @@ function onLine(s){
   onQuaternionLine(s);
  } else if(s.startsWith('#I,')){
   onImuLine(s);
+ } else if(s.startsWith('#N,')){onSensorLine(s);
  } else if(s.startsWith('#G,'))onGpio(s.split(',').slice(1).map(Number));
  else if(s.startsWith('#P,'))onPed(s.split(',').slice(1).map(Number));
  else if(s.startsWith('#C,'))onCal(s.split(',').slice(1));
@@ -318,7 +321,7 @@ const V=r=>(r*3.6/1023).toFixed(2);
 $('pc12on').onclick=()=>send('$GPIO PC12 1').catch(e=>log(String(e)+'\n'));
 $('pc12off').onclick=()=>send('$GPIO PC12 0').catch(e=>log(String(e)+'\n'));
 let gpioLast=0;
-function resetGpio(){for(const pin of ['pc12','pa11','pa12','pc2','pc13'])$('g_'+pin).textContent='нет данных';}
+function resetGpio(){for(const pin of ['pc12','pa11','pa12'])$('g_'+pin).textContent='нет данных';}
 setInterval(()=>{if(!gpioLast || Date.now()-gpioLast>1500)resetGpio()},500);
 function gpioText(v){return v?'1 / HIGH':'0 / LOW'}
 function onGpio(v){
@@ -329,8 +332,28 @@ function onGpio(v){
  $('g_pc12').textContent=s(0);
  $('g_pa11').textContent=s(1);
  $('g_pa12').textContent=s(2);
- $('g_pc2').textContent=s(3);
- $('g_pc13').textContent=s(4);
+ // PC2/HX711 are updated only by versioned numeric #N telemetry.
+}
+let sensorLast=0;
+function resetSensors(){
+ $('g_pc2').textContent='нет данных';$('g_pc13').textContent='нет данных';
+ $('pc2Volts').textContent='PC2: нет свежих данных';
+ $('sensorState').textContent='HX711: нет свежих данных';
+}
+setInterval(()=>{if(!sensorLast || Date.now()-sensorLast>1500)resetSensors()},500);
+function onSensorLine(line){
+ const a=line.split(',').slice(1);
+ if(a.length!==6 || a.some(x=>!/^[-]?\d+$/.test(x)))return false;
+ const v=a.map(Number);if(!v.every(Number.isSafeInteger))return false;
+ const [version,flags,pc2,hx,seq,age]=v;
+ if(version!==1 || flags<0 || flags>31 || pc2<0 || pc2>4095 || hx< -8388608 || hx>8388607 || seq<0 || seq>65535 || age<0 || age>65535)return false;
+ sensorLast=Date.now();
+ $('g_pc2').textContent=(flags&1)?String(pc2):'нет данных';
+ $('pc2Volts').textContent=(flags&1)?'PC2: ≈ '+(pc2*3.3/4095).toFixed(3)+' В (VDDA принято 3,3 В)':((flags&16)?'PC2: ошибка АЦП':'PC2: ожидание АЦП');
+ const valid=Boolean((flags&2) && !(flags&4) && age<=1500);
+ $('g_pc13').textContent=valid?String(hx):'нет данных';
+ $('sensorState').textContent=valid?('HX711: канал A ×128 · возраст '+age+' мс · №'+seq+((flags&8)?' · ПРЕДЕЛ ДИАПАЗОНА':'')):((flags&4)||age>1500?'HX711: нет готовых данных / таймаут':'HX711: запуск, ожидание преобразования');
+ return true;
 }
 function onPed(v){
  const [tr,br,thr,brk,flt,rev,on,tmin,tmax,bmin,bmax]=v;
@@ -357,7 +380,7 @@ function onCal(a){
  else if(a[0]=='ERR'){const e=+a[1];
   log('Калибровка: '+(e&8?'сначала нажмите «Калибровка»':(e&4?'ошибка записи flash (действует до сброса)':'малый ход'+(e&1?' газа':'')+(e&2?' тормоза':'')+' - нажмите до упора и снова «Сохранить»'))+'\n')}
 }
-function setLink(ok){if(!ok){gpioLast=0;resetGpio();}$('link').textContent=ok?'Плата сигвея: связь есть':'Плата сигвея: нет связи';$('link').style.background=ok?'#263':'#633'}
+function setLink(ok){if(!ok){gpioLast=0;resetGpio();sensorLast=0;resetSensors();}$('link').textContent=ok?'Плата сигвея: связь есть':'Плата сигвея: нет связи';$('link').style.background=ok?'#263':'#633'}
 async function connect(){
  try{
   resetImu(); inbuf='';
