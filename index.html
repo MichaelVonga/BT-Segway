@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru"><head><meta charset="utf-8">
-<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NB-BT пульт v11.7 — PC9 ошибки и HX711</title>
+
+<html lang="ru"><head><meta charset="utf-8"/>
+<meta content="no-cache,no-store,must-revalidate" http-equiv="Cache-Control"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>NB-BT v11.7 — компактный пульт</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -88,71 +89,175 @@
 #reverseControl,#saveStickConfig{width:100%;min-height:44px;margin-top:12px}
 #joy{touch-action:none}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #88bfff;outline-offset:3px}
 @media(max-width:420px){.controls-card{padding:12px}.control-selects,.control-actions{gap:8px}.cal-actions{grid-template-columns:1fr}.control-actions button{font-size:14px}}
-</style></head><body>
-<button id="con">Подключиться к NB-BT</button>
-<div id="board3d">
- <div style="-webkit-transform-style:preserve-3d;transform-style:preserve-3d;-webkit-transform:none;transform:none">
-  <div id="b3i">
-   <div class="board-front">
-   <div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b,#0d3a0d);border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a"></div>
-   <div style="position:absolute;left:50%;top:2px;transform:translateX(-50%);width:32px">
-    <svg width="32" height="22" style="display:block">
-     <polygon points="16,0 32,6 26,22 6,22 0,6" fill="#444" stroke="#888" stroke-width="1"/>
-     <line x1="8"  y1="6" x2="8"  y2="18" stroke="#ddd" stroke-width="2"/>
-     <line x1="14" y1="6" x2="14" y2="18" stroke="#ddd" stroke-width="2"/>
-     <line x1="20" y1="6" x2="20" y2="18" stroke="#ddd" stroke-width="2"/>
-     <line x1="26" y1="6" x2="26" y2="18" stroke="#ddd" stroke-width="2"/>
-    </svg>
-   </div>
-   <div style="position:absolute;left:calc(50% - 48px);top:4px;display:flex;gap:3px">
-    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
-    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
-   </div>
-   <div style="position:absolute;left:calc(50% + 24px);top:4px;display:flex;gap:3px">
-    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
-    <div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
-   </div>
-   <div style="position:absolute;left:4px;top:28px;display:flex;flex-direction:column;gap:4px">
-    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
-    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
-   </div>
-   <div style="position:absolute;right:4px;top:28px;display:flex;flex-direction:column;gap:4px">
-    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
-    <div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
-   </div>
-   <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:36px;height:30px;background:#222;border:1px solid #666;border-radius:2px"></div>
 
-   <div style="position:absolute;bottom:10%;right:12%;font-size:16px;color:#8f8;opacity:.8">&#9654;</div>
-   </div>
-   <div id="board_back">
-    <svg width="56" height="34" style="display:block">
-     <rect x="1" y="5" width="54" height="27" rx="2" fill="#222" stroke="#888" stroke-width="1.5"/>
-     <rect x="7"  y="10" width="12" height="15" rx="1" fill="#c0a000" stroke="#ffe060" stroke-width="1"/>
-     <rect x="22" y="10" width="12" height="15" rx="1" fill="#c0a000" stroke="#ffe060" stroke-width="1"/>
-     <rect x="37" y="10" width="12" height="15" rx="1" fill="#c0a000" stroke="#ffe060" stroke-width="1"/>
-     <rect x="20" y="0"  width="16" height="6"  rx="1" fill="#555"    stroke="#888" stroke-width="1"/>
-    </svg>
-   </div>
-   <div class="face" style="width:220px;height:14px;left:0;top:53px;background:#174317;transform:rotateX(90deg) translateZ(60px)"></div>
-   <div class="face" style="width:220px;height:14px;left:0;top:53px;background:#174317;transform:rotateX(-90deg) translateZ(60px)"></div>
-   <div class="face" style="width:14px;height:120px;left:103px;top:0;background:#174317;transform:rotateY(90deg) translateZ(110px)"></div>
-   <div class="face" style="width:14px;height:120px;left:103px;top:0;background:#174317;transform:rotateY(-90deg) translateZ(110px)"></div>
-  </div>
- </div>
+/* Compact layout v11.7: presentation only, original JavaScript unchanged. */
+*{box-sizing:border-box}
+body{max-width:960px;margin:0 auto;padding:12px;font-family:system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.4}
+button,summary,select{min-height:44px}
+button{cursor:pointer}button:disabled{cursor:not-allowed}
+summary{display:list-item;padding:10px 12px;font-size:15px;line-height:24px;cursor:pointer;border-radius:8px;background:#252525;color:#e8edf4}
+details{margin-top:10px;border:1px solid #414141;border-radius:8px;padding:0 8px 8px}
+details:not([open]){padding:0}details[open]>summary{margin:0 -8px 8px}
+summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#driveTelemetry{min-width:0}#link{font-size:14px;margin:8px 0 6px;padding:5px 8px}
+.main-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:0}
+.c{min-width:0;padding:6px 4px;border:1px solid #383838}
+.c span{font-size:14px;color:#b8bdc5;line-height:1.25;display:block}
+.c b{font-size:22px;line-height:1.2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.main-metrics .speed-card{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:6px 10px;gap:8px}
+.speed-card span{max-width:64%;text-align:left}.speed-card b{margin:0!important;font-size:24px!important}
+.controls-card{margin:8px 0 12px;padding:10px;background:#191919}
+#controlState{margin:0 0 8px;min-height:0;font-size:14px;line-height:1.4;color:#c5def3;overflow-wrap:anywhere}
+.control-actions{gap:8px}.control-actions button{min-height:44px;font-size:14px}
+.controls-card #stopControl{background:#9e3037;color:#fff;font-weight:700;border:1px solid #ee8990}
+#joyw{margin-top:10px}#joy{width:220px;height:220px;flex-shrink:0;border-color:#777}
+#knob{width:72px;height:72px;background:#346bc5;border:1px solid #94baff;left:72px;top:72px}
+#joyv{font-size:14px;line-height:20px;margin-top:4px;color:#c0c6d0}
+#joyHint{margin:4px 0 6px;text-align:center;font-size:14px;line-height:1.4}
+.power-label{margin:8px 0;font-size:14px;line-height:20px}.power-label input{margin:0;min-height:44px;padding:0}
+.control-note{font-size:14px;line-height:1.5;margin:8px 0;color:#c5c8ce}
+.control-selects{gap:8px}.control-selects label{font-size:14px}.control-selects select{margin-top:4px;background:#292929;color:#fff;border:1px solid #777;border-radius:6px;padding:4px}
+#autoPhysical{margin-top:8px;font-size:14px}#physicalCalibration{margin-top:10px}
+#gpioPanel h3{font-size:17px;margin:12px 0 8px}#gpioPanel button{font-size:14px;padding:8px 4px}
+#gpioPanel .dash{gap:6px}#pc2Volts,#pc2InputVolts,#sensorState{margin:6px 0;font-size:14px!important;line-height:1.4}
+#g_note{color:#c1c5cc!important;font-size:14px!important}
+#gpioPanel,#imuPanel,#boardSettings{margin-top:12px}
+.wheel-setting{margin:8px 0}.wheel-setting input{max-width:160px;display:block;margin:6px auto}
+.imu-panel{padding:10px}#log{height:140px}
+@media(min-width:740px){#driveLayout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}#driveTelemetry{position:sticky;top:12px}.controls-card{margin-top:8px}#con{max-width:100%}.main-metrics .c{padding:12px 6px}.main-metrics .c b{font-size:28px}}
+@media(max-height:700px) and (max-width:739px){body{padding:8px}#joy{width:190px;height:190px}.main-metrics .c{padding:4px}.main-metrics .c b{font-size:20px}#con{font-size:16px;padding:8px}.controls-card{padding:8px}}
+</style></head><body><button id="con">Подключиться к NB-BT</button><main id="driveLayout"><section aria-label="Показатели во время управления" id="driveTelemetry"><div id="link">Плата сигвея: нет данных</div><div aria-label="Основные показатели" class="dash main-metrics">
+
+
+
+
+
+
+
+
+
+<div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div><div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div><div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div><div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div><div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div><div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div><div class="c speed-card"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div></div></section><section aria-labelledby="controlHeading" class="controls-card">
+<div hidden="" id="hcm"></div>
+<h3 class="sr-only" id="controlHeading">Управление</h3>
+
+<div aria-live="polite" id="controlState" role="status">Ожидание Bluetooth-платы с прошивкой v11.2</div>
+
+<div class="control-actions"><button disabled="" id="arm">Разрешить управление</button><button class="x" id="stopControl">СТОП / выключить</button></div>
+
+
+<div id="joyPanel">
+<div id="joyw"><div aria-label="Джойстик" id="joy" role="group"><div id="knob"></div></div><div id="joyv">руль 0 · газ 0</div></div>
+<p class="control-note" id="joyHint">Удерживайте для движения. Отпускание — в ноль.</p>
 </div>
-<div id="d_angles" aria-label="Углы ориентации">
- <div class="angle-cell"><span class="angle-label">pitch</span><span class="angle-value"><span id="anglePitch" class="angle-number">—</span></span></div>
- <div class="angle-cell"><span class="angle-label">roll</span><span class="angle-value"><span id="angleRoll" class="angle-number">—</span></span></div>
- <div class="angle-cell"><span class="angle-label">yaw</span><span class="angle-value"><span id="angleYaw" class="angle-number">—</span></span></div>
+<div hidden="" id="virtualPedals">
+<div class="pedal-sliders">
+<label>Газ <output id="vThrText">0%</output><input id="vThr" max="1000" min="0" step="5" type="range" value="0"/></label>
+<label>Тормоз <output id="vBrkText">0%</output><input id="vBrk" max="1000" min="0" step="5" type="range" value="0"/></label>
+</div><p class="control-note">Удерживайте ползунок как педаль. Отпускание — возврат в ноль. Тормоз имеет приоритет над газом и не ослабляется ограничением тяги.</p>
+</div>
+<label class="power-label">Ограничение тяги / руля: <b id="pwrv">100</b>%<input id="pwr" max="100" min="10" step="5" type="range" value="100"/></label><div hidden="" id="physicalReadings">
+<div class="dash" style="grid-template-columns:1fr 1fr">
+<div class="c"><span id="rawLabelA">Газ</span><b id="p_thr">—</b><div class="bar"><i id="p_thrb"></i></div><span id="p_thrr"></span></div>
+<div class="c"><span id="rawLabelB">Тормоз</span><b id="p_brk">—</b><div class="bar"><i id="p_brkb" style="background:#c63"></i></div><span id="p_brkr"></span></div>
+</div><div id="p_st" style="font-size:14px;margin-top:8px"></div>
+</div>
+<button class="m" hidden="" id="reverseControl">Вперёд / назад</button>
+<details hidden="" id="physicalCalibration"><summary>Калибровка физических входов</summary>
+<div hidden="" id="pedalCalibration">
+<details><summary>Подробнее: калибровка педалей</summary><p class="control-note">Нажмите «Начать», плавно нажмите обе педали до упора и отпустите. Затем сохраните. На калибровке команды моторам нулевые.</p></details>
+<div class="cal-actions"><button id="calstart">Начать</button><button id="calsave">Сохранить</button><button class="x" id="calcancel">Отмена</button></div>
+<div id="calbox"></div></div>
+<div hidden="" id="stickCalibration">
+<details><summary>Подробнее: калибровка джойстика</summary><p class="control-note">1. Отпустите джойстик и начните калибровку. Держите центр неподвижно около секунды.<br/>2. После приглашения проведите ручку по всем краям, верните в центр и сохраните.</p></details>
+<div id="joyCalState" role="status">Калибровка джойстика ещё не получена</div>
+<div class="cal-actions"><button id="jcalstart">Начать</button><button disabled="" id="jcalsave">Сохранить</button><button class="x" id="jcalcancel">Отмена</button></div>
+<label class="power-label">Мёртвая зона: <b id="dzText">5</b>%<input id="deadzone" max="20" min="2" step="1" type="range" value="5"/></label>
+<label class="check-label"><input id="invertX" type="checkbox"/> Инвертировать X — руль</label>
+<label class="check-label"><input id="invertY" type="checkbox"/> Инвертировать Y — движение</label>
+<button id="saveStickConfig">Сохранить зону и инверсию</button>
+<details><summary>Подробнее: калибровка джойстика</summary><p class="control-note">X подключается вместо газа (P0.02), Y вместо тормоза (P0.03). Питание 3,3 В, общая земля. При почти 0 В на любом входе управление блокируется, даже если это штатный край хода. Для джойстика, доходящего до 0 В, потребуется согласовать диапазон аппаратно. Два аналоговых сигнала не позволяют обнаружить все обрывы и замыкания.</p></details>
+</div></details>
+<details id="controlOptions"><summary>Источник управления и автоопределение</summary><div class="control-selects">
+<label>Режим<select id="driveKind"><option value="0">Джойстик</option><option value="1">Педали</option></select></label>
+<label>Источник<select id="inputKind"><option value="0">Виртуальный</option><option value="1">Физический</option></select></label>
+</div><button class="s" id="autoPhysical" style="width:100%;margin-bottom:12px">Автоопределить физические входы</button><details id="controlHelp"><summary>Подробнее: автозапуск и безопасность</summary><p class="control-note">Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения. Физические входы: лимит по умолчанию 100%, виртуальные — 30%; ручная настройка сохраняется до перезапуска отдельно для каждой группы.<br/>Bluetooth не нужен для физических входов. Если за 4 секунды физические входы не определены, выбирается виртуальный джойстик с автоматическим разрешением после нейтрали. Он выключается при потере связи. После СТОП требуется явное возобновление. СТОП защёлкивает остановку для всех источников.</p></details></details><details id="moreDriveData"><summary>Подробнее: режим и лимиты</summary><div class="dash"><div class="c"><span>Режим</span><b id="d_mode">-</b></div><div class="c"><span>Imax, А</span><b id="d_imax">-</b></div><div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div></div><div class="wheel-setting"><span>Диаметр колеса, дюйм</span><input id="wheeld" max="30" min="4" step="0.1" style="width:100%" type="number"/></div></details></section></main><section aria-label="GPIO и датчики" id="gpioPanel"><h3>GPIO / датчики</h3>
+<div class="g3" style="grid-template-columns:1.2fr 1fr 1fr">
+<button class="s" id="pc12on" type="button">PC12 подсветка ВКЛ</button>
+<button class="x" id="pc12off" type="button">PC12 подсветка ВЫКЛ</button>
+<div class="c"><span>PC12</span><b id="g_pc12">-</b></div>
+</div>
+<div class="dash" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px">
+<div class="c"><span>PA11</span><b id="g_pa11">-</b></div>
+<div class="c"><span>PA12</span><b id="g_pa12">-</b></div>
+<div class="c"><span>PC2 — АЦП 0–4095</span><b id="g_pc2">-</b></div>
+<div class="c"><span>PC13 — HX711, отсчёт</span><b id="g_pc13">-</b></div>
+</div>
+<p id="pc2Volts" style="font-size:14px">PC2: нет данных</p>
+<p id="pc2InputVolts" style="font-size:14px">До делителя PC2: нет данных</p>
+<p id="sensorState" role="status" style="font-size:14px">HX711: ожидание данных</p>
+<details id="sensorDetails"><summary>Подробнее: делитель, HX711 и PC9</summary><p id="g_note" style="font-size:13px;line-height:1.5;color:#aaa">PC2 — АЦП STM32; напряжения приблизительные при VDDA=3,3 В. До делителя: напряжение PC2 ×1,5 (10 кОм сверху, 20 кОм к земле). HX711 — знаковый 24-битный отсчёт канала A, усиление 128; это не килограммы. При ошибке PC9 показывает прежний код миганием, чтение HX711 приостановлено. После ошибки — перезапуск и восстановление показаний. PA15 сохраняет индикацию ошибок. Датчики только отображаются и не управляют моторами.</p></details></section><details id="imuPanel"><summary>Ориентация / IMU — подробнее</summary><div id="board3d">
+<div style="-webkit-transform-style:preserve-3d;transform-style:preserve-3d;-webkit-transform:none;transform:none">
+<div id="b3i">
+<div class="board-front">
+<div style="position:absolute;inset:0;background:linear-gradient(160deg,#1b5c1b,#0d3a0d);border:2px solid #3a3;border-radius:5px;box-shadow:inset 0 0 12px #000a"></div>
+<div style="position:absolute;left:50%;top:2px;transform:translateX(-50%);width:32px">
+<svg height="22" style="display:block" width="32">
+<polygon fill="#444" points="16,0 32,6 26,22 6,22 0,6" stroke="#888" stroke-width="1"></polygon>
+<line stroke="#ddd" stroke-width="2" x1="8" x2="8" y1="6" y2="18"></line>
+<line stroke="#ddd" stroke-width="2" x1="14" x2="14" y1="6" y2="18"></line>
+<line stroke="#ddd" stroke-width="2" x1="20" x2="20" y1="6" y2="18"></line>
+<line stroke="#ddd" stroke-width="2" x1="26" x2="26" y1="6" y2="18"></line>
+</svg>
+</div>
+<div style="position:absolute;left:calc(50% - 48px);top:4px;display:flex;gap:3px">
+<div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+<div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+</div>
+<div style="position:absolute;left:calc(50% + 24px);top:4px;display:flex;gap:3px">
+<div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+<div style="width:8px;height:10px;background:#c8a020;border:1px solid #ffd060;border-radius:1px"></div>
+</div>
+<div style="position:absolute;left:4px;top:28px;display:flex;flex-direction:column;gap:4px">
+<div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+<div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+</div>
+<div style="position:absolute;right:4px;top:28px;display:flex;flex-direction:column;gap:4px">
+<div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+<div style="width:14px;height:20px;background:linear-gradient(180deg,#888,#555);border:1px solid #aaa;border-radius:1px"></div>
+</div>
+<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:36px;height:30px;background:#222;border:1px solid #666;border-radius:2px"></div>
+<div style="position:absolute;bottom:10%;right:12%;font-size:16px;color:#8f8;opacity:.8">▶</div>
+</div>
+<div id="board_back">
+<svg height="34" style="display:block" width="56">
+<rect fill="#222" height="27" rx="2" stroke="#888" stroke-width="1.5" width="54" x="1" y="5"></rect>
+<rect fill="#c0a000" height="15" rx="1" stroke="#ffe060" stroke-width="1" width="12" x="7" y="10"></rect>
+<rect fill="#c0a000" height="15" rx="1" stroke="#ffe060" stroke-width="1" width="12" x="22" y="10"></rect>
+<rect fill="#c0a000" height="15" rx="1" stroke="#ffe060" stroke-width="1" width="12" x="37" y="10"></rect>
+<rect fill="#555" height="6" rx="1" stroke="#888" stroke-width="1" width="16" x="20" y="0"></rect>
+</svg>
+</div>
+<div class="face" style="width:220px;height:14px;left:0;top:53px;background:#174317;transform:rotateX(90deg) translateZ(60px)"></div>
+<div class="face" style="width:220px;height:14px;left:0;top:53px;background:#174317;transform:rotateX(-90deg) translateZ(60px)"></div>
+<div class="face" style="width:14px;height:120px;left:103px;top:0;background:#174317;transform:rotateY(90deg) translateZ(110px)"></div>
+<div class="face" style="width:14px;height:120px;left:103px;top:0;background:#174317;transform:rotateY(-90deg) translateZ(110px)"></div>
+</div>
+</div>
+</div>
+<div aria-label="Углы ориентации" id="d_angles">
+<div class="angle-cell"><span class="angle-label">pitch</span><span class="angle-value"><span class="angle-number" id="anglePitch">—</span></span></div>
+<div class="angle-cell"><span class="angle-label">roll</span><span class="angle-value"><span class="angle-number" id="angleRoll">—</span></span></div>
+<div class="angle-cell"><span class="angle-label">yaw</span><span class="angle-value"><span class="angle-number" id="angleYaw">—</span></span></div>
 </div>
 <div id="imuMode" role="status">IMU: ожидание ориентации со STM32</div>
 <div class="dash imu-axes" style="grid-template-columns:repeat(3,1fr);margin-top:4px">
- <div class="c"><span>ax, g</span><b id="d_ax">-</b></div>
- <div class="c"><span>ay, g</span><b id="d_ay">-</b></div>
- <div class="c"><span>az, g</span><b id="d_az">-</b></div>
- <div class="c"><span>gx, °/s</span><b id="d_gx">-</b></div>
- <div class="c"><span>gy, °/s</span><b id="d_gy">-</b></div>
- <div class="c"><span>gz, °/s</span><b id="d_gz">-</b></div>
+<div class="c"><span>ax, g</span><b id="d_ax">-</b></div>
+<div class="c"><span>ay, g</span><b id="d_ay">-</b></div>
+<div class="c"><span>az, g</span><b id="d_az">-</b></div>
+<div class="c"><span>gx, °/s</span><b id="d_gx">-</b></div>
+<div class="c"><span>gy, °/s</span><b id="d_gy">-</b></div>
+<div class="c"><span>gz, °/s</span><b id="d_gz">-</b></div>
 </div>
 <details id="imuSettings"><summary>Настройки IMU</summary>
 <div class="imu-panel">
@@ -160,124 +265,37 @@
 <select id="axisMap"><option value="0">0°: X вправо, Y к верхнему краю модели</option><option value="90">+90°: X к верхнему краю, Y влево</option><option value="180">180°: X влево, Y к нижнему краю</option><option value="270">270°: X к нижнему краю, Y вправо</option></select>
 <p>Ориентация рассчитывается на STM32 по акселерометру и гироскопу. Страница отображает готовый кватернион; отдельного переключателя слияния больше нет.</p>
 <p>При запуске платы начинается автокалибровка. Повторную калибровку с этой страницы запускайте только после СТОП. Оставьте плату неподвижной примерно на 4 секунды в любом положении, без вибраций. При движении окно измерений начинается заново. Медленное равномерное вращение может быть принято за смещение нуля. В STM32 v10.5 предел сырых показаний до вычитания нуля — 30°/с по модулю вектора; проверки стабильности сохранены.</p>
-<div class="imu-actions"><button id="gyroZeroBtn" class="s" type="button">Калибровать гироскоп</button></div>
+<div class="imu-actions"><button class="s" id="gyroZeroBtn" type="button">Калибровать гироскоп</button></div>
 <p id="gyroZeroStatus" role="status">Ожидание подключения.</p>
 <p>gx/gy/gz — скорость с вычтенным нулём после калибровки. Курс относительный: без магнитометра остаточный дрейф возможен. Кнопка ниже задаёт нулевой курс только для модели, не меняя наклон и прошивку.</p>
-<div class="imu-actions"><button id="imuReset" class="s" type="button">Обнулить курс модели</button></div>
-</div></details>
-<h3>GPIO / датчики</h3>
-<div class="g3" style="grid-template-columns:1.2fr 1fr 1fr">
- <button id="pc12on" class="s" type="button">PC12 подсветка ВКЛ</button>
- <button id="pc12off" class="x" type="button">PC12 подсветка ВЫКЛ</button>
- <div class="c"><span>PC12</span><b id="g_pc12">-</b></div>
-</div>
-<div class="dash" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px">
- <div class="c"><span>PA11</span><b id="g_pa11">-</b></div>
- <div class="c"><span>PA12</span><b id="g_pa12">-</b></div>
- <div class="c"><span>PC2 — АЦП 0–4095</span><b id="g_pc2">-</b></div>
- <div class="c"><span>PC13 — HX711, отсчёт</span><b id="g_pc13">-</b></div>
-</div>
-<p id="pc2Volts" style="font-size:14px">PC2: нет данных</p>
-<p id="pc2InputVolts" style="font-size:14px">До делителя PC2: нет данных</p>
-<p id="sensorState" role="status" style="font-size:14px">HX711: ожидание данных</p>
-<p id="g_note" style="font-size:13px;line-height:1.5;color:#aaa">PC2 — АЦП STM32; напряжения приблизительные при VDDA=3,3 В. До делителя: напряжение PC2 ×1,5 (10 кОм сверху, 20 кОм к земле). HX711 — знаковый 24-битный отсчёт канала A, усиление 128; это не килограммы. При ошибке PC9 показывает прежний код миганием, чтение HX711 приостановлено. После ошибки — перезапуск и восстановление показаний. PA15 сохраняет индикацию ошибок. Датчики только отображаются и не управляют моторами.</p>
-
-<div id="link">Плата сигвея: нет данных</div>
-
-<div class="dash">
- <div class="c"><span>Режим</span><b id="d_mode">-</b></div>
- <div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div>
- <div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div>
- <div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div>
- <div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div>
- <div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div>
- <div class="c"><span>Imax, А</span><b id="d_imax">-</b></div>
- <div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div>
- <div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div>
-</div>
-<div class="dash" style="grid-template-columns:2fr 1fr">
- <div class="c"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div>
- <div class="c"><span>Диаметр колеса, дюйм</span><input id="wheeld" type="number" min="4" max="30" step="0.1" style="width:100%"></div>
-</div>
-
-<section class="controls-card" aria-labelledby="controlHeading">
-<div id="hcm" hidden></div>
-<h3 id="controlHeading">Управление</h3>
-<div class="control-selects">
-<label>Режим<select id="driveKind"><option value="0">Джойстик</option><option value="1">Педали</option></select></label>
-<label>Источник<select id="inputKind"><option value="0">Виртуальный</option><option value="1">Физический</option></select></label>
-</div>
-<div id="controlState" role="status" aria-live="polite">Ожидание Bluetooth-платы с прошивкой v11.2</div>
-<button id="autoPhysical" class="s" style="width:100%;margin-bottom:12px">Автоопределить физические входы</button>
-<div class="control-actions"><button id="arm" disabled>Разрешить управление</button><button id="stopControl" class="x">СТОП / выключить</button></div>
-<p class="control-note">Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения. Физические входы: лимит по умолчанию 100%, виртуальные — 30%; ручная настройка сохраняется до перезапуска отдельно для каждой группы.<br>Bluetooth не нужен для физических входов. Если за 4 секунды физические входы не определены, выбирается виртуальный джойстик с автоматическим разрешением после нейтрали. Он выключается при потере связи. После СТОП требуется явное возобновление. СТОП защёлкивает остановку для всех источников.</p>
-<label class="power-label">Ограничение тяги / руля: <b id="pwrv">100</b>%<input id="pwr" type="range" min="10" max="100" step="5" value="100"></label>
-<div id="joyPanel">
-<div id="joyw"><div id="joy" aria-label="Джойстик" role="group"><div id="knob"></div></div><div id="joyv">руль 0 · газ 0</div></div>
-<p id="joyHint" class="control-note">Удерживайте джойстик. При отпускании команда возвращается в ноль.</p>
-</div>
-<div id="virtualPedals" hidden>
-<div class="pedal-sliders">
-<label>Газ <output id="vThrText">0%</output><input id="vThr" type="range" min="0" max="1000" value="0" step="5"></label>
-<label>Тормоз <output id="vBrkText">0%</output><input id="vBrk" type="range" min="0" max="1000" value="0" step="5"></label>
-</div><p class="control-note">Удерживайте ползунок как педаль. Отпускание — возврат в ноль. Тормоз имеет приоритет над газом и не ослабляется ограничением тяги.</p>
-</div>
-<div id="physicalReadings" hidden>
-<div class="dash" style="grid-template-columns:1fr 1fr">
- <div class="c"><span id="rawLabelA">Газ</span><b id="p_thr">—</b><div class="bar"><i id="p_thrb"></i></div><span id="p_thrr"></span></div>
- <div class="c"><span id="rawLabelB">Тормоз</span><b id="p_brk">—</b><div class="bar"><i id="p_brkb" style="background:#c63"></i></div><span id="p_brkr"></span></div>
-</div><div id="p_st" style="font-size:14px;margin-top:8px"></div>
-</div>
-<button id="reverseControl" class="m" hidden>Вперёд / назад</button>
-<details id="physicalCalibration" hidden><summary>Калибровка физических входов</summary>
-<div id="pedalCalibration" hidden>
-<p class="control-note">Нажмите «Начать», плавно нажмите обе педали до упора и отпустите. Затем сохраните. На калибровке команды моторам нулевые.</p>
-<div class="cal-actions"><button id="calstart">Начать</button><button id="calsave">Сохранить</button><button id="calcancel" class="x">Отмена</button></div>
-<div id="calbox"></div></div>
-<div id="stickCalibration" hidden>
-<p class="control-note">1. Отпустите джойстик и начните калибровку. Держите центр неподвижно около секунды.<br>2. После приглашения проведите ручку по всем краям, верните в центр и сохраните.</p>
-<div id="joyCalState" role="status">Калибровка джойстика ещё не получена</div>
-<div class="cal-actions"><button id="jcalstart">Начать</button><button id="jcalsave" disabled>Сохранить</button><button id="jcalcancel" class="x">Отмена</button></div>
-<label class="power-label">Мёртвая зона: <b id="dzText">5</b>%<input id="deadzone" type="range" min="2" max="20" step="1" value="5"></label>
-<label class="check-label"><input id="invertX" type="checkbox"> Инвертировать X — руль</label>
-<label class="check-label"><input id="invertY" type="checkbox"> Инвертировать Y — движение</label>
-<button id="saveStickConfig">Сохранить зону и инверсию</button>
-<p class="control-note">X подключается вместо газа (P0.02), Y вместо тормоза (P0.03). Питание 3,3 В, общая земля. При почти 0 В на любом входе управление блокируется, даже если это штатный край хода. Для джойстика, доходящего до 0 В, потребуется согласовать диапазон аппаратно. Два аналоговых сигнала не позволяют обнаружить все обрывы и замыкания.</p>
-</div></details>
-</section>
-
-<h3>Управление платой</h3>
+<div class="imu-actions"><button class="s" id="imuReset" type="button">Обнулить курс модели</button></div>
+</div></details></details><details id="boardSettings"><summary>Настройки платы: режим, ток и обороты</summary><h3>Управление платой</h3>
 <div class="g" style="grid-template-columns:repeat(5,1fr);margin-top:8px">
- <button class="x" data-c="MODE=0">COM</button><button class="x" data-c="MODE=1">SIN</button>
- <button class="x" data-c="MODE=2">VLT</button><button class="x" data-c="MODE=3">SPD</button><button class="x" data-c="MODE=4">TRQ</button>
+<button class="x" data-c="MODE=0">COM</button><button class="x" data-c="MODE=1">SIN</button>
+<button class="x" data-c="MODE=2">VLT</button><button class="x" data-c="MODE=3">SPD</button><button class="x" data-c="MODE=4">TRQ</button>
 </div>
-<div class="row"><button class="s" onclick="step('imax',-1)">−</button><input id="imax" type="number" min="1" max="40" placeholder="Imax, А"><button class="s" onclick="step('imax',1)">+</button><button onclick="setv('IMAX','imax')">Ток</button></div>
-<div class="row"><button class="s" onclick="step('nmax',-50)">−</button><input id="nmax" type="number" min="10" max="2000" placeholder="Nmax"><button class="s" onclick="step('nmax',50)">+</button><button onclick="setv('NMAX','nmax')">Обороты</button></div>
+<div class="row"><button class="s" onclick="step('imax',-1)">−</button><input id="imax" max="40" min="1" placeholder="Imax, А" type="number"/><button class="s" onclick="step('imax',1)">+</button><button onclick="setv('IMAX','imax')">Ток</button></div>
+<div class="row"><button class="s" onclick="step('nmax',-50)">−</button><input id="nmax" max="2000" min="10" placeholder="Nmax" type="number"/><button class="s" onclick="step('nmax',50)">+</button><button onclick="setv('NMAX','nmax')">Обороты</button></div>
 <div class="g" style="margin-top:6px">
- <button class="s" onclick="nq(120)">120</button><button class="s" onclick="nq(200)">200</button><button class="s" onclick="nq(300)">300</button><button class="b" onclick="nq(2000)">Макс</button>
+<button class="s" onclick="nq(120)">120</button><button class="s" onclick="nq(200)">200</button><button class="s" onclick="nq(300)">300</button><button class="b" onclick="nq(2000)">Макс</button>
 </div>
 <div class="g3" style="margin-top:8px">
- <button class="x" data-c="FW=0">Ослаб. поля выкл</button><button class="x" data-c="FW=1">Ослаб. поля вкл</button>
- <button class="b" data-c="SAVE">Сохранить</button>
+<button class="x" data-c="FW=0">Ослаб. поля выкл</button><button class="x" data-c="FW=1">Ослаб. поля вкл</button>
+<button class="b" data-c="SAVE">Сохранить</button>
 </div>
-
-<details><summary>Тест BT-платы (светодиоды, буззер)</summary>
+</details><details><summary>Тест BT-платы (светодиоды, буззер)</summary>
 <div class="g" style="margin-top:8px">
- <button data-c="L1">L1</button><button data-c="L2">L2</button>
- <button data-c="L3">L3</button><button data-c="L4">L4</button>
- <button data-c="LA=1" class="s">Все ВКЛ</button><button data-c="LA=0" class="x">Все ВЫКЛ</button>
- <button data-c="RUN" class="s">Бегущий</button><button data-c="INV" class="x">Инверсия</button>
- <button data-c="BEEP" class="b">Пик</button><button data-c="B=1000,400" class="b">1 кГц</button>
- <button data-c="B=4000,400" class="b">4 кГц</button><button data-c="BOFF" class="x">Тихо</button>
- <button data-c="BMIR=1" class="s">Буззер платы вкл</button><button data-c="BMIR=0" class="x">Буззер платы выкл</button>
- <button data-c="FB" class="s">FB текстом</button><button data-c="?" class="s">Статус</button>
- <button data-c="P15=0" class="s">P15=0</button><button data-c="P15=1" class="x">P15=1</button>
- <button data-c="P16=0" class="s">P16=0</button><button data-c="P16=1" class="x">P16=1</button>
-</div></details>
-
-<input id="cmd" style="margin-top:10px" placeholder="Команда, Enter (например $SET N_MOT_MAX 500)">
-<div id="log"></div>
-<script>
+<button data-c="L1">L1</button><button data-c="L2">L2</button>
+<button data-c="L3">L3</button><button data-c="L4">L4</button>
+<button class="s" data-c="LA=1">Все ВКЛ</button><button class="x" data-c="LA=0">Все ВЫКЛ</button>
+<button class="s" data-c="RUN">Бегущий</button><button class="x" data-c="INV">Инверсия</button>
+<button class="b" data-c="BEEP">Пик</button><button class="b" data-c="B=1000,400">1 кГц</button>
+<button class="b" data-c="B=4000,400">4 кГц</button><button class="x" data-c="BOFF">Тихо</button>
+<button class="s" data-c="BMIR=1">Буззер платы вкл</button><button class="x" data-c="BMIR=0">Буззер платы выкл</button>
+<button class="s" data-c="FB">FB текстом</button><button class="s" data-c="?">Статус</button>
+<button class="s" data-c="P15=0">P15=0</button><button class="x" data-c="P15=1">P15=1</button>
+<button class="s" data-c="P16=0">P16=0</button><button class="x" data-c="P16=1">P16=1</button>
+</div></details><details id="debugConsole"><summary>Консоль и журнал</summary><input id="cmd" placeholder="Команда, Enter (например $SET N_MOT_MAX 500)" style="margin-top:10px"/><div id="log"></div></details><script>
 const NUS='6e400001-b5a3-f393-e0a9-e50e24dcca9e',RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e',TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 const TYP=['COM','SIN','FOC'],MOD=['OPEN','VLT','SPD','TRQ'];
 const ERR={0:'OK',1:'неизвестная команда',2:'неизвестный параметр',4:'вне диапазона',5:'нет значения',10:'колёса крутятся',11:'нужен FOC'};
@@ -561,6 +579,7 @@ function syncControls(){
  else if(rx&&fresh&&physical&&controlAuto.allowed&&!control.pending&&!control.error&&!control.stage&&!control.armed)message='Автозапуск: верните входы в нейтраль и остановите колёса.';
  $('controlState').textContent=(fresh?(controlAuto.detect?'Тип ещё не определён':sourceNames[control.source])+'. ':'')+message+(localMessage?' '+localMessage:'');
  $('joyCalState').textContent=control.stage===1?'Шаг 1/2: центр, около 1 секунды стабильных измерений.':control.stage===2?'Шаг 2/2: пройдите все крайние положения и отпустите ручку.':control.valid?'Калибровка джойстика сохранена.':'До первой калибровки: центр около 1,65 В, диапазон 0–3,3 В, мёртвая зона 20%. Уточните диапазон калибровкой.';
+ if(!$('joyPanel').hidden)drawKnob(); // layout-only: correct after switching pedals/joystick
 }
 function onAutoStatus(line){
  const v=line.slice(3).split(',').map(Number);if((v.length!==4&&v.length!==5)||!v.every(x=>x===0||x===1))return;
@@ -635,6 +654,7 @@ window.addEventListener('blur',()=>{if(freshControls()&&isVirtual()&&(control.ar
 $('con').onclick=connect;
 document.querySelectorAll('button[data-c]').forEach(b=>b.onclick=()=>guardedSend(b.dataset.c));
 $('cmd').onkeydown=e=>{if(e.key==='Enter'){guardedSend(e.target.value);e.target.value=''}};
+window.addEventListener('resize',()=>{if(!$('joyPanel').hidden)drawKnob()}); // layout-only
 syncControls();drawKnob();
 if(!navigator.bluetooth)log('Web Bluetooth недоступен: откройте в Bluefy (iPhone) или Chrome (Android)\n');
 
