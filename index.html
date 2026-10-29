@@ -3,7 +3,7 @@
 <html lang="ru"><head><meta charset="utf-8"/>
 <meta content="no-cache,no-store,must-revalidate" http-equiv="Cache-Control"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>NB-BT v11.7 — компактный пульт</title>
+<title>NB-BT v12 — две STM32 / стендовая версия</title>
 <style>
  body{font-family:sans-serif;background:#111;color:#eee;margin:0;padding:12px}
  h3{margin:14px 0 6px}
@@ -127,25 +127,29 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 .imu-panel{padding:10px}#log{height:140px}
 @media(min-width:740px){#driveLayout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}#driveTelemetry{position:sticky;top:12px}.controls-card{margin-top:8px}#con{max-width:100%}.main-metrics .c{padding:12px 6px}.main-metrics .c b{font-size:28px}}
 @media(max-height:700px) and (max-width:739px){body{padding:8px}#joy{width:190px;height:190px}.main-metrics .c{padding:4px}.main-metrics .c b{font-size:20px}#con{font-size:16px;padding:8px}.controls-card{padding:8px}}
-</style></head><body><button id="con">Подключиться к NB-BT</button><main id="driveLayout"><section aria-label="Показатели во время управления" id="driveTelemetry"><div id="link">Плата сигвея: нет данных</div><div aria-label="Основные показатели" class="dash main-metrics">
 
-
-
-
-
-
-
-
-
-<div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div><div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div><div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div><div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div><div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div><div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div><div class="c speed-card"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div></div></section><section aria-labelledby="controlHeading" class="controls-card">
+#dualOverview{display:grid;gap:6px;margin:6px 0}.dual-node{border:1px solid #555;border-radius:8px;background:#202020;padding:8px 10px;min-width:0}.dual-node.selected{border-color:#72bc8f}.dual-node>b{font-size:14px}.dual-node>span{float:right;font-size:14px}.dual-node small{display:block;font:12px monospace;color:#b9bec6;overflow-wrap:anywhere;margin:2px 0}.dual-values{display:grid;grid-template-columns:1fr 1.6fr;gap:6px;font-size:14px;color:#c6c8cd}.dual-values strong{display:block;color:#fff;font-size:22px;line-height:1.2;font-variant-numeric:tabular-nums}.dual-node p{font-size:14px;line-height:1.3;margin:4px 0}.dual-node p[id$=sensors]{display:none}
+#dualSelection p,#dualAllData p{font-size:14px;line-height:1.5;margin:8px}.dual-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.dual-buttons button{font-size:14px;min-height:48px}.dual-view{display:block;font-size:14px;margin:12px 0 6px}.dual-view select{display:block;width:100%;font-size:16px;min-height:44px;background:#292929;color:#fff;margin-top:6px}.dual-table{overflow:auto}.dual-table table{border-collapse:collapse;width:100%;font-size:14px}.dual-table th,.dual-table td{padding:6px;border-bottom:1px solid #444;text-align:left;overflow-wrap:anywhere}#dualAllData,#dualSelection{overflow-wrap:anywhere}#limpConfirm{width:24px;height:24px;flex-shrink:0}#dualSelection .check-label{align-items:flex-start;line-height:1.5;margin:12px 4px}.dual-node>span{max-width:46%;overflow-wrap:anywhere}
+@media(max-height:700px) and (max-width:739px){.dual-node{padding:5px 8px}.dual-node small{display:none}.dual-node p{font-size:14px;margin:2px 0}.dual-values strong{font-size:20px}}
+</style></head><body><button id="con">Подключиться к NB-BT</button><main id="driveLayout"><section aria-label="Показатели во время управления" id="driveTelemetry"><div id="link">Плата сигвея: нет данных</div>
+<p hidden="" id="dualAlert" role="status"></p>
+<div id="dualOverview">
+<div class="dual-node" id="node0card"><b>Плата у Bluetooth</b><span id="node0state">—</span><small id="node0uid">—</small><div class="dual-values"><div>Батарея, В<strong id="node0bat">—</strong></div><div>Обороты L / R<strong id="node0rpm">—</strong></div></div><p id="node0other">—</p><p id="node0sensors">—</p></div>
+<div class="dual-node" id="node1card"><b>Вторая плата</b><span id="node1state">—</span><small id="node1uid">—</small><div class="dual-values"><div>Батарея, В<strong id="node1bat">—</strong></div><div>Обороты L / R<strong id="node1rpm">—</strong></div></div><p id="node1other">—</p><p id="node1sensors">—</p></div>
+</div>
+<details id="dualSelection"><summary>Привод: <span id="dualMode">Ожидание v12</span></summary>
+<p id="dualState" role="status">Ожидание шлюза</p>
+<p>После СТОП и полной остановки выберите привод. После выбора нажмите «Разрешить управление» и отпустите органы управления в нейтраль.</p>
+<div class="dual-buttons"><button disabled="" id="drive3">Обе платы</button><button class="s" disabled="" id="drive1">Только у BT</button><button class="s" disabled="" id="drive2">Только вторая</button></div>
+<label class="check-label"><input id="limpConfirm" type="checkbox"/>Проверил: отключаемая ось не мешает движению. На одной плате еду только с безопасной ограниченной нагрузкой.</label>
+<p id="dualChoiceResult" role="status"></p>
+<p>Дополнительного лимита 30% для одной платы из пары нет. Действуют обычные настройки тока, оборотов и ползунок выбранного источника. На одной оси полная команда может быть небезопасна. Ошибки выбранной платы не обходятся. Нет гарантии свободного вращения неисправных моторов. При переносе BT названия «у BT / вторая» меняются; уникальные ID плат — нет.</p>
+</details>
+</section><section aria-labelledby="controlHeading" class="controls-card">
 <div hidden="" id="hcm"></div>
 <h3 class="sr-only" id="controlHeading">Управление</h3>
-
 <div aria-live="polite" id="controlState" role="status">Ожидание Bluetooth-платы с прошивкой v11.2</div>
-
 <div class="control-actions"><button disabled="" id="arm">Разрешить управление</button><button class="x" id="stopControl">СТОП / выключить</button></div>
-
-
 <div id="joyPanel">
 <div id="joyw"><div aria-label="Джойстик" id="joy" role="group"><div id="knob"></div></div><div id="joyv">руль 0 · газ 0</div></div>
 <p class="control-note" id="joyHint">Удерживайте для движения. Отпускание — в ноль.</p>
@@ -162,7 +166,7 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 <div class="c"><span id="rawLabelB">Тормоз</span><b id="p_brk">—</b><div class="bar"><i id="p_brkb" style="background:#c63"></i></div><span id="p_brkr"></span></div>
 </div><div id="p_st" style="font-size:14px;margin-top:8px"></div>
 </div>
-<button class="m" hidden="" id="reverseControl">Вперёд / назад</button>
+<button class="m" hidden="" id="reverseControl">Вперёд / назад</button><p id="reverseInfo" class="control-note">Реверс: двойное нажатие тормоза на остановленном аппарате, газ отпущен. Направление общее; после подтверждения выбранных плат отпустите педали в нейтраль на 0,6 с. СТОП нажимать не нужно.</p>
 <details hidden="" id="physicalCalibration"><summary>Калибровка физических входов</summary>
 <div hidden="" id="pedalCalibration">
 <details><summary>Подробнее: калибровка педалей</summary><p class="control-note">Нажмите «Начать», плавно нажмите обе педали до упора и отпустите. Затем сохраните. На калибровке команды моторам нулевые.</p></details>
@@ -181,7 +185,8 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 <details id="controlOptions"><summary>Источник управления и автоопределение</summary><div class="control-selects">
 <label>Режим<select id="driveKind"><option value="0">Джойстик</option><option value="1">Педали</option></select></label>
 <label>Источник<select id="inputKind"><option value="0">Виртуальный</option><option value="1">Физический</option></select></label>
-</div><button class="s" id="autoPhysical" style="width:100%;margin-bottom:12px">Автоопределить физические входы</button><details id="controlHelp"><summary>Подробнее: автозапуск и безопасность</summary><p class="control-note">Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения. Физические входы: лимит по умолчанию 100%, виртуальные — 30%; ручная настройка сохраняется до перезапуска отдельно для каждой группы.<br/>Bluetooth не нужен для физических входов. Если за 4 секунды физические входы не определены, выбирается виртуальный джойстик с автоматическим разрешением после нейтрали. Он выключается при потере связи. После СТОП требуется явное возобновление. СТОП защёлкивает остановку для всех источников.</p></details></details><details id="moreDriveData"><summary>Подробнее: режим и лимиты</summary><div class="dash"><div class="c"><span>Режим</span><b id="d_mode">-</b></div><div class="c"><span>Imax, А</span><b id="d_imax">-</b></div><div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div></div><div class="wheel-setting"><span>Диаметр колеса, дюйм</span><input id="wheeld" max="30" min="4" step="0.1" style="width:100%" type="number"/></div></details></section></main><section aria-label="GPIO и датчики" id="gpioPanel"><h3>GPIO / датчики</h3>
+</div><button class="s" id="autoPhysical" style="width:100%;margin-bottom:12px">Автоопределить физические входы</button><details id="controlHelp"><summary>Подробнее: автозапуск и безопасность</summary><p class="control-note">Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения. Физические входы: лимит по умолчанию 100%, виртуальные — 30%; ручная настройка сохраняется до перезапуска отдельно для каждой группы.<br/>Bluetooth не нужен для физических входов. Если за 4 секунды физические входы не определены, выбирается виртуальный джойстик с автоматическим разрешением после нейтрали. Он выключается при потере связи. После СТОП требуется явное возобновление. СТОП защёлкивает остановку для всех источников.</p></details></details><details id="moreDriveData"><summary>Подробнее: режим и лимиты</summary><div class="dash"><div class="c"><span>Режим</span><b id="d_mode">-</b></div><div class="c"><span>Imax, А</span><b id="d_imax">-</b></div><div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div></div><div class="wheel-setting"><span>Диаметр колеса, дюйм</span><input id="wheeld" max="30" min="4" step="0.1" style="width:100%" type="number"/></div></details><details id="selectedMetrics"><summary>Подробные показатели выбранной платы</summary><div aria-label="Основные показатели" class="dash main-metrics">
+<div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div><div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div><div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div><div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div><div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div><div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div><div class="c speed-card"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div></div></details></section></main><section aria-label="GPIO и датчики" id="gpioPanel"><label class="dual-view">Подробно / команды датчикам:<select id="viewNode"><option value="0">Плата у Bluetooth</option><option value="1">Вторая плата</option></select></label><p id="dualRpc" role="status"></p><h3>GPIO / датчики</h3>
 <div class="g3" style="grid-template-columns:1.2fr 1fr 1fr">
 <button class="s" id="pc12on" type="button">PC12 подсветка ВКЛ</button>
 <button class="x" id="pc12off" type="button">PC12 подсветка ВЫКЛ</button>
@@ -295,7 +300,7 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 <button class="s" data-c="FB">FB текстом</button><button class="s" data-c="?">Статус</button>
 <button class="s" data-c="P15=0">P15=0</button><button class="x" data-c="P15=1">P15=1</button>
 <button class="s" data-c="P16=0">P16=0</button><button class="x" data-c="P16=1">P16=1</button>
-</div></details><details id="debugConsole"><summary>Консоль и журнал</summary><input id="cmd" placeholder="Команда, Enter (например $SET N_MOT_MAX 500)" style="margin-top:10px"/><div id="log"></div></details><script>
+</div></details><details id="debugConsole"><summary>Консоль и журнал</summary><input id="cmd" placeholder="Команда, Enter (например $SET N_MOT_MAX 500)" style="margin-top:10px"/><div id="log"></div></details><details id="dualAllData"><summary>Все поля обеих плат / диагностика канала</summary><p id="dualStats">—</p><div class="dual-table"><table><thead><tr><th>Поле (исходные единицы)</th><th>У BT</th><th>Вторая</th></tr></thead><tbody id="dualTableBody"></tbody></table></div></details><script>
 const NUS='6e400001-b5a3-f393-e0a9-e50e24dcca9e',RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e',TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 const TYP=['COM','SIN','FOC'],MOD=['OPEN','VLT','SPD','TRQ'];
 const ERR={0:'OK',1:'неизвестная команда',2:'неизвестный параметр',4:'вне диапазона',5:'нет значения',10:'колёса крутятся',11:'нужен FOC'};
@@ -420,7 +425,7 @@ async function connect(){
  try{
   resetImu(); inbuf='';
   dev=await navigator.bluetooth.requestDevice({filters:[{services:[NUS]}],optionalServices:[NUS]});
-  dev.addEventListener('gattserverdisconnected',()=>{rx=null;disconnectControls();inbuf='';resetImu();setLink(false);log('[отключено]\n');$('con').textContent='Подключиться к NB-BT';rx=null});
+  dev.addEventListener('gattserverdisconnected',()=>{rx=null;disconnectControls();inbuf='';resetImu();dualReset();setLink(false);log('[отключено]\n');$('con').textContent='Подключиться к NB-BT';rx=null});
   const s=await(await dev.gatt.connect()).getPrimaryService(NUS);
   rx=await s.getCharacteristic(RX);
   const tx=await s.getCharacteristic(TX);
@@ -464,6 +469,7 @@ function resetImu(){
  renderImu();syncImuStatus();
 }
 function feedRx(value){
+ if(value.byteLength&&value.getUint8(0)===0xD7){dualFeed(value);return;}
  inbuf+=new TextDecoder().decode(value);
  let m;while((m=inbuf.match(/[\r\n]/))){const i=m.index,line=inbuf.slice(0,i).trim();inbuf=inbuf.slice(i+1);if(line)onLine(line)}
  if(inbuf.length>8192){inbuf='';log('[RX: сброшен буфер без окончания строки]\n')}
@@ -545,7 +551,7 @@ const control={source:0,pending:0,armed:false,waiting:false,error:0,valid:false,
 let requestedSource=null,sourceRequestedAt=0,jx=0,jy=0,virtualBusy=false,localMessage='';
 const joy=$('joy'),knob=$('knob');
 const sourceNames=['Виртуальный джойстик','Физический джойстик','Виртуальные педали','Физические педали'];
-const controlErrors={1:'Нет подтверждения режима STM32. Повторите выбор источника.',2:'STM32 отклонил смену режима.',3:'Нужна остановка и калибровка входов.',4:'Физический вход вне допустимого диапазона. Проверьте подключение и верните в нейтраль.',5:'Пропали виртуальные команды. Включите управление повторно.',6:'Ошибка записи flash: настройки действуют только до перезапуска.',7:'Остановите оба колеса.'};
+const controlErrors={1:'Нет подтверждения режима STM32. Повторите выбор источника.',2:'STM32 отклонил смену режима.',3:'Нужна остановка и калибровка входов.',4:'Физический вход вне допустимого диапазона. Проверьте подключение и верните в нейтраль.',5:'Пропали виртуальные команды. Включите управление повторно.',6:'Ошибка записи flash: настройки действуют только до перезапуска.',7:'Остановите оба колеса.',8:'Реверс не подтверждён. Управление выключено; проверьте платы и разрешите заново.'};
 function freshControls(){return control.last>0&&performance.now()-control.last<1500}
 function isVirtual(){return control.source===0||control.source===2}
 function resetInputs(){jx=jy=0;$('vThr').value=$('vBrk').value='0';updatePedalText();drawKnob()}
@@ -559,8 +565,9 @@ function syncControls(){
  $('physicalReadings').hidden=!physical;$('physicalCalibration').hidden=!physical||controlAuto.detect;
  $('pedalCalibration').hidden=control.source!==3;$('stickCalibration').hidden=control.source!==1;
  $('reverseControl').hidden=!pedals||controlAuto.detect;
- $('reverseControl').disabled=!fresh||control.armed||control.waiting||control.pending!==0||control.stage!==0;
- $('reverseControl').title='Сначала нажмите СТОП и остановите оба колеса';
+ $('reverseInfo').hidden=!pedals||controlAuto.detect;
+ $('reverseControl').disabled=!fresh||control.waiting||control.pending!==0||control.stage!==0||!!window.reverseUiPhase;
+ $('reverseControl').title='Без кнопки СТОП: остановите выбранные колёса и отпустите газ. Также работает двойное нажатие тормоза.';
  $('rawLabelA').textContent=pedals?'Газ':'X — руль, сырой вход';$('rawLabelB').textContent=pedals?'Тормоз':'Y — движение, сырой вход';
  $('joyHint').textContent=physical?'Положение физического джойстика. Круг на экране только показывает данные.':'Удерживайте джойстик. Отпускание — возврат команды в ноль.';
  joy.classList.toggle('on',fresh&&control.armed&&control.source===0);
@@ -577,6 +584,7 @@ function syncControls(){
  if(rx&&fresh&&controlAuto.detect)message='Автоопределение: отпустите оба входа. Ожидаются стабильные напряжения около 0,8 В (педали) или 1,65 В (джойстик).';
  else if(rx&&fresh&&control.source===0&&controlAuto.virtualAllowed&&!control.pending&&!control.armed)message='Виртуальный джойстик выбран автоматически. Ожидание нейтрали и связи 0,6 с — отдельное разрешение не нужно.';
  else if(rx&&fresh&&physical&&controlAuto.allowed&&!control.pending&&!control.error&&!control.stage&&!control.armed)message='Автозапуск: верните входы в нейтраль и остановите колёса.';
+ if(fresh&&window.reverseUiPhase){message='Переключение направления: тяга временно снята.';$('arm').textContent='Тяга временно снята';}
  $('controlState').textContent=(fresh?(controlAuto.detect?'Тип ещё не определён':sourceNames[control.source])+'. ':'')+message+(localMessage?' '+localMessage:'');
  $('joyCalState').textContent=control.stage===1?'Шаг 1/2: центр, около 1 секунды стабильных измерений.':control.stage===2?'Шаг 2/2: пройдите все крайние положения и отпустите ручку.':control.valid?'Калибровка джойстика сохранена.':'До первой калибровки: центр около 1,65 В, диапазон 0–3,3 В, мёртвая зона 20%. Уточните диапазон калибровкой.';
  if(!$('joyPanel').hidden)drawKnob(); // layout-only: correct after switching pedals/joystick
@@ -600,6 +608,7 @@ function onControls(line){
  syncControls();
 }
 function controlMessage(s){
+ if(s.startsWith('#E,dual,')){localMessage='Две платы: сначала СТОП, выберите исправный привод и дождитесь подтверждения. Подробности в разделе «Привод».';syncControls();return;}
  const errors={'#E,source,stop':'Переключение возможно только при связи со STM32 и остановленных колёсах.','#E,arm,notready':'Нужны подтверждённый источник, остановка и завершённая калибровка.','#E,cal,travel':'Недостаточный ход: пройдите обе оси в обе стороны.','#E,cal,center':'Перед сохранением отпустите джойстик в центр.','#E,config,stop':'Остановите колёса перед изменением настройки.','#E,command,disarm':'Сначала выключите управление и завершите калибровку.'};
  localMessage=errors[s]||s;requestedSource=null;syncControls();log(localMessage+'\n');
 }
@@ -614,7 +623,7 @@ $('arm').onclick=async()=>{resetInputs();await virtualTick(true);await guardedSe
 async function stopControls(){resetInputs();control.armed=false;control.waiting=false;syncControls();if(rx)await guardedSend('STOP')}
 $('stopControl').onclick=stopControls;
 $('autoPhysical').onclick=async()=>{resetInputs();await guardedSend('AUTO')};
-function disconnectControls(){resetInputs();control.last=0;control.armed=control.waiting=false;requestedSource=null;controlAuto.known=false;controlAuto.detect=false;controlAuto.allowed=false;controlAuto.virtualAllowed=false;syncControls()}
+function disconnectControls(){window.reverseUiPhase=0;resetInputs();control.last=0;control.armed=control.waiting=false;requestedSource=null;controlAuto.known=false;controlAuto.detect=false;controlAuto.allowed=false;controlAuto.virtualAllowed=false;syncControls()}
 function joyPos(e){
  if(control.source!==0||!control.armed||!freshControls())return;
  const r=joy.getBoundingClientRect(),R=r.width/2;let x=(e.clientX-r.left-R)/R,y=(e.clientY-r.top-R)/R;
@@ -658,4 +667,134 @@ window.addEventListener('resize',()=>{if(!$('joyPanel').hidden)drawKnob()}); // 
 syncControls();drawKnob();
 if(!navigator.bluetooth)log('Web Bluetooth недоступен: откройте в Bluefy (iPhone) или Chrome (Android)\n');
 
+// v12 binary BLE telemetry. Text #S/#D/#P continues to serve the original controls.
+const dualNodes=[{words:new Uint16Array(40),time:[0,0,0],uid:'—'},
+                 {words:new Uint16Array(40),time:[0,0,0],uid:'—'}];
+let dualSelected=0,dualMeta=null,dualMetaAt=0,dualAssembly=null,dualBad=0;
+const dualSequences=[null,null,null,null],dualPacketAt=[0,0,0,0];
+const dualTripNames=['Нет блокировки','Обнаружена вторая плата: выберите привод','Потеря межплатной связи','Ошибка выбранной платы','Два BT-контроллера: движение запрещено','Перезапуск / смена платы','Не согласованы настройки','Задержка основного цикла','Потеря связи с BT-платой','Неизвестные данные на USART3','СТОП'];
+function dualCrc(bytes){let c=65535;for(const b of bytes){c^=b<<8;for(let i=0;i<8;i++)c=((c&32768)?(c<<1)^0x1021:c<<1)&65535;}return c;}
+function dualSigned(x){return x&32768?x-65536:x;}
+function dualPresent(n){return dualMeta && performance.now()-dualMetaAt<1500 && (n===0||!!(dualMeta.flags&1));}
+function dualFresh(n,type){return dualPresent(n)&&dualNodes[n].time[type]>0&&performance.now()-dualNodes[n].time[type]<1500;}
+function dualReset(){dualMeta=null;dualMetaAt=0;dualAssembly=null;dualSequences.fill(null);dualPacketAt.fill(0);for(const n of dualNodes){n.time.fill(0);n.words.fill(0);n.uid='—';}dualRenderOverview();}
+function dualUid(v,offset){return [0,4,8].map(k=>v.getUint32(offset+k,true).toString(16).padStart(8,'0')).join('-');}
+function dualFeed(value){
+ const b=new Uint8Array(value.buffer,value.byteOffset,value.byteLength);
+ if(b.length<5||b[0]!==0xD7)return false;
+ const id=b[1],index=b[2],count=b[3],now=performance.now();
+ if(count<1||count>5||index>=count||b.length>20||(index<count-1&&b.length!==20)){dualBad++;dualAssembly=null;return true;}
+ if(index===0)dualAssembly={id,count,next:0,data:[],at:now};
+ const a=dualAssembly;
+ if(!a||a.id!==id||a.count!==count||a.next!==index||now-a.at>1000){dualBad++;dualAssembly=null;return true;}
+ a.data.push(...b.slice(4));a.next++;
+ if(a.next===count){dualAssembly=null;if(!dualPacket(new Uint8Array(a.data)))dualBad++;}
+ return true;
+}
+function dualPacket(p){
+ if(p.length<8||p[0]!==12||p[1]<1||p[1]>4||p[2]<1||p[2]>3||p[3]!==0)return false;
+ const type=p[1]-1,expected=[40,64,72,80][type];if(p.length!==expected)return false;
+ const v=new DataView(p.buffer,p.byteOffset,p.byteLength);
+ if(dualCrc(p.slice(0,-2))!==v.getUint16(p.length-2,true))return false;
+ const seq=v.getUint16(4,true),old=dualSequences[type];
+ if(old!==null&&performance.now()-dualPacketAt[type]<2000){const d=(seq-old)&65535;if(d===0||d>=32768)return false;}
+ dualSequences[type]=seq;const now=performance.now();dualPacketAt[type]=now;
+ if(type===3){
+  const h=new DataView(p.buffer,p.byteOffset+6,62);
+  if(h.getUint16(0,true)!==0xD3B6||h.getUint16(2,true)!==12||h.getUint16(4,true)!==224)return false;
+  const boot=h.getUint32(32,true),peerBoot=h.getUint32(36,true);
+  if(dualMeta&&(dualMeta.boot!==boot||dualMeta.peerBoot!==peerBoot)){
+   for(const n of dualNodes)n.time.fill(0);resetImu();resetSensors();dualSequences.fill(null);
+  }
+  dualNodes[0].uid=dualUid(h,8);dualNodes[1].uid=dualUid(h,20);
+  dualMeta={flags:h.getUint16(6,true),boot,peerBoot,mask:h.getUint16(44,true),trip:h.getUint16(46,true),
+   fault:h.getUint16(48,true),peerFault:h.getUint16(50,true),peerAge:h.getUint16(52,true),
+   controllerAge:h.getUint16(54,true),rpcSeq:h.getUint16(56,true),rpcAck:h.getUint16(58,true),rpcError:h.getUint16(60,true),
+   replaced:[0,1,2,3].map(i=>v.getUint16(68+i*2,true)),textDrops:v.getUint16(76,true)};
+  dualMetaAt=now;setLink(true);
+ }else{
+  let offset=6;
+  for(let n=0;n<2;n++){
+   const node=dualNodes[n];const ranges=type===0?[[23,8]]:type===1?[[17,6],[31,8]]:[[1,16]];
+   for(const [first,count] of ranges)for(let k=0;k<count;k++){node.words[first+k]=v.getUint16(offset,true);offset+=2;}
+   if(p[2]&(1<<n))node.time[type]=now;else node.time[type]=0;
+  }
+  dualRenderSelected(type);
+ }
+ dualRenderOverview();return true;
+}
+function dualRenderSelected(type=-1){
+ const n=dualSelected,w=dualNodes[n].words,s=i=>dualSigned(w[i]);
+ if(!dualPresent(n)){resetImu();resetSensors();for(const id of ['mode','bat','temp','l','r','dc','imax','nmax','en','kmh'])$('d_'+id).textContent='—';return;}
+ if((type===2||type===-1)&&dualFresh(n,2))onLine('#F,'+[w[8],w[9],s(10),s(11),s(5),s(6),s(4),s(3),s(12),w[13],w[14],s(1),s(2)].join(','));
+ if((type===0||type===-1)&&dualFresh(n,0))onLine('#Q,1,'+[w[27],w[28],w[29]+w[30]*65536,s(23),s(24),s(25),s(26)].join(','));
+ if((type===1||type===-1)&&dualFresh(n,1)){
+  onLine('#I,'+[17,18,19,20,21,22].map(s).join(','));onLine('#G,'+[w[31],w[32]].join(','));
+  const hx=(w[34]|(w[35]<<16));onLine('#N,2,'+[w[36],w[33],hx,w[37],w[38]].join(','));
+ }
+}
+function dualRenderOverview(){
+ const fresh=dualMeta&&performance.now()-dualMetaAt<1500,m=dualMeta;
+ const modeNames={0:'Привод не выбран',1:'Только плата у BT',2:'Только вторая плата',3:'Обе платы'};
+ $('dualMode').textContent=fresh?modeNames[m.mask]||'Неизвестный режим':'Ожидание v12';
+ $('dualState').textContent=fresh?(dualTripNames[m.trip]||'Блокировка '+m.trip)+((m.flags&8)?' · готово':' · движение не разрешено'):'Нет свежего состояния шлюза';
+ $('dualStats').textContent=fresh?'Замены устаревших снимков BLE Q/raw/main/status: '+m.replaced.join('/')+' · пропуски текста: '+m.textDrops+' · ошибки сборки: '+dualBad:'Нет статистики';
+ $('dualAlert').textContent=fresh&&m.trip?(dualTripNames[m.trip]||'Блокировка '+m.trip):'';
+ $('dualAlert').hidden=!(fresh&&m.trip);
+ const blocked=!fresh||control.armed||control.waiting||control.pending||!(m.flags&512)||((m.flags&1)&&!(m.flags&256));
+ for(const mask of [1,2,3])$('drive'+mask).disabled=blocked||((mask&2)&&!(m&&m.flags&1))||!!(m&&(((mask&1)&&m.fault)||((mask&2)&&m.peerFault)));
+ for(let n=0;n<2;n++){
+  const node=dualNodes[n],w=node.words,main=dualFresh(n,2),raw=dualFresh(n,1),s=i=>dualSigned(w[i]);
+  $('node'+n+'uid').textContent=node.uid;
+  $('node'+n+'state').textContent=!dualPresent(n)?'нет связи':((n?m.peerFault:m.fault)?'ошибка 0x'+(n?m.peerFault:m.fault).toString(16):'связь есть');
+  $('node'+n+'bat').textContent=main?(s(5)/100).toFixed(1):'—';
+  $('node'+n+'rpm').textContent=main?s(4)+' / '+s(3):'—';
+  $('node'+n+'other').textContent=main?'Ток '+(s(12)/100).toFixed(2)+' А · '+(s(6)/10).toFixed(1)+' °C · E'+(w[14]&255)+'/'+(w[14]>>>8):'Ожидание основных показателей';
+  $('node'+n+'sensors').textContent=raw?'PC2 '+w[33]+' · HX '+((w[36]&32)?'пауза':(w[36]&64)?'запуск':(w[36]&2)?(w[34]|w[35]<<16):'нет данных'):'Ожидание датчиков';
+  const selected=((m?.mask||0)&(1<<n))!==0;$('node'+n+'card').classList.toggle('selected',!!fresh&&selected&&!m.trip);
+ }
+ if(!fresh||!dualPresent(dualSelected))dualRenderSelected();
+ else {
+  if(!dualFresh(dualSelected,2))for(const id of ['mode','bat','temp','l','r','dc','imax','nmax','en','kmh'])$('d_'+id).textContent='—';
+  if(!dualFresh(dualSelected,1)){resetSensors();resetGpio();}
+  if(!dualFresh(dualSelected,0)&&imu.ready)resetImu();
+ }
+ if(m&&m.rpcSeq===m.rpcAck&&m.rpcSeq)$('dualRpc').textContent=m.rpcError?'Удалённая команда: ошибка '+m.rpcError:'Удалённая команда подтверждена второй платой';
+ dualRenderTable();
+}
+const dualLabels=['start','Команда 1','Команда 2','Обороты R','Обороты L','Батарея ×100','Температура ×10','Диагностика UART','Тип управления','Режим','Imax ×10','Nmax','Ток DC ×100','Статус','Ошибки моторов','Буззер','ACK','ax mg','ay mg','az mg','gx ×10','gy ×10','gz ×10','qw Q14','qx Q14','qy Q14','qz Q14','IMU flags','IMU seq','IMU ms low','IMU ms high','GPIO bits','GPIO seq','PC2 ADC','HX low','HX high','Sensor flags','HX seq','HX age ms'];
+function dualRenderTable(){
+ const body=$('dualTableBody');if(!body.children.length)for(let i=1;i<39;i++){
+  const row=document.createElement('tr');for(const text of [dualLabels[i],'—','—']){const cell=document.createElement('td');cell.textContent=text;row.append(cell);}body.append(row);
+ }
+ for(let i=1;i<39;i++)for(let n=0;n<2;n++){
+  const type=i>=23&&i<=30?0:i>=17?1:2;
+  const word=dualNodes[n].words[i],signed=[1,2,3,4,5,6,10,11,12,17,18,19,20,21,22,23,24,25,26].includes(i);
+  body.children[i-1].children[n+1].textContent=dualFresh(n,type)?String(signed?dualSigned(word):word):'—';
+ }
+}
+async function dualChoose(mask){
+ if(control.armed||control.waiting){log('Сначала СТОП\n');return;}
+ if(mask!==3&&dualMeta&&(dualMeta.flags&1024)&&!$('limpConfirm').checked){$('dualChoiceResult').textContent='Подтвердите проверку отключаемой оси';return;}
+ $('dualChoiceResult').textContent='Запрос отправляется. Режим подтверждается состоянием STM32.';
+ await guardedSend('DRIVE='+mask);
+}
+async function dualTargetCommand(command){
+ if(control.armed||control.waiting){log('Сначала СТОП\n');return;}
+ try{await send('TARGET='+dualSelected);await send(command);}catch(e){log(String(e)+'\n');}
+}
+$('viewNode').onchange=()=>{dualSelected=+$('viewNode').value;resetImu();resetSensors();filled=false;dualRenderSelected();};
+$('pc12on').onclick=()=>dualTargetCommand('$GPIO PC12 1');$('pc12off').onclick=()=>dualTargetCommand('$GPIO PC12 0');
+$('gyroZeroBtn').onclick=()=>dualTargetCommand('$IMUCAL');
+for(const mask of [1,2,3])$('drive'+mask).onclick=()=>dualChoose(mask);
+setInterval(()=>{dualRenderOverview();},250);
+dualReset();
+
+</script><script>
+window.reverseUiPhase=0;
+const reverseOnLine=onLine;
+onLine=function(line){if(line.startsWith('#R,')){const p=line.split(',');const phase=+p[1],target=+p[2];window.reverseUiPhase=phase;
+ $('reverseInfo').textContent=phase?(phase===1?'Реверс: снимаю тягу…':phase===2?'Реверс: жду подтверждение плат…':'Направление '+(target?'назад':'вперёд')+' подтверждено. Отпустите педали в нейтраль на 0,6 с.'):'Реверс: двойное нажатие тормоза на остановленном аппарате, газ отпущен. СТОП не нужен.';
+ $('reverseControl').textContent=phase?'Переключение направления…':'Вперёд / назад';
+ return;}reverseOnLine(line);};
 </script></body></html>
