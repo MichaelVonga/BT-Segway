@@ -138,12 +138,13 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 <div class="dual-node" id="node1card"><b>Вторая плата</b><span id="node1state">—</span><small id="node1uid">—</small><div class="dual-values"><div>Батарея, В<strong id="node1bat">—</strong></div><div>Обороты L / R<strong id="node1rpm">—</strong></div></div><p id="node1other">—</p><p id="node1sensors">—</p></div>
 </div>
 <details id="dualSelection"><summary>Привод: <span id="dualMode">Ожидание v12</span></summary>
+<p id="drivePolicy">Автоматический состав привода</p>
 <p id="dualState" role="status">Ожидание шлюза</p>
-<p>При включении исправные платы выбираются автоматически: обе при наличии второй, иначе одна. После СТОП, ошибки или обрыва связи нужен ручной выбор/возобновление; органы управления — в нейтрали.</p>
+<p>Автопривод: вторая плата появилась — обе оси; связь пропала — только у BT; восстановилась — обе. Перед сменой ждём нейтраль и остановку доступных колёс, затем подтверждение и ещё 0,6 с нейтрали. Ошибка мотора любой доступной платы или ручной СТОП блокируют автоматическое возобновление. Скорость недоступной оси неизвестна: её свободное вращение не гарантируется. Ручной выбор ниже отключает автоматический перевыбор до перезапуска BT. Ограничения тока и оборотов сохраняются.</p>
 <div class="dual-buttons"><button disabled="" id="drive3">Обе платы</button><button class="s" disabled="" id="drive1">Только у BT</button><button class="s" disabled="" id="drive2">Только вторая</button></div>
 <label class="check-label"><input id="limpConfirm" type="checkbox"/>Проверил: отключаемая ось не мешает движению. На одной плате еду только с безопасной ограниченной нагрузкой.</label>
 <p id="dualChoiceResult" role="status"></p>
-<p>Дополнительного лимита 30% для одной платы из пары нет. Действуют обычные настройки тока, оборотов и ползунок выбранного источника. На одной оси полная команда может быть небезопасна. Ошибки выбранной платы не обходятся. Нет гарантии свободного вращения неисправных моторов. При переносе BT названия «у BT / вторая» меняются; уникальные ID плат — нет.</p>
+
 </details>
 </section><section aria-labelledby="controlHeading" class="controls-card">
 <div hidden="" id="hcm"></div>
@@ -185,7 +186,7 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 <details id="controlOptions"><summary>Источник управления и автоопределение</summary><div class="control-selects">
 <label>Режим<select id="driveKind"><option value="0">Джойстик</option><option value="1">Педали</option></select></label>
 <label>Источник<select id="inputKind"><option value="0">Виртуальный</option><option value="1">Физический</option></select></label>
-</div><button class="s" id="autoPhysical" style="width:100%;margin-bottom:12px">Автоопределить физические входы</button><details id="controlHelp"><summary>Подробнее: автозапуск и безопасность</summary><p class="control-note">Сначала автоматически выбирается исправный привод. Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения. Физические входы: лимит по умолчанию 100%, виртуальные — 30%; ручная настройка сохраняется до перезапуска отдельно для каждой группы.<br/>Bluetooth не нужен для физических входов. Если за 4 секунды физические входы не определены, выбирается виртуальный джойстик с автоматическим разрешением после нейтрали. Он выключается при потере связи. После СТОП требуется явное возобновление. СТОП защёлкивает остановку для всех источников.</p></details></details><details id="moreDriveData"><summary>Подробнее: режим и лимиты</summary><div class="dash"><div class="c"><span>Режим</span><b id="d_mode">-</b></div><div class="c"><span>Imax, А</span><b id="d_imax">-</b></div><div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div></div><div class="wheel-setting"><span>Диаметр колеса, дюйм</span><input id="wheeld" max="30" min="4" step="0.1" style="width:100%" type="number"/></div></details><details id="selectedMetrics"><summary>Подробные показатели выбранной платы</summary><div aria-label="Основные показатели" class="dash main-metrics">
+</div><button class="s" id="autoPhysical" style="width:100%;margin-bottom:12px">Автоопределить физические входы</button><details id="controlHelp"><summary>Подробнее: автозапуск и безопасность</summary><p class="control-note">Сначала автоматически выбирается исправный привод. Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения. Физические входы: лимит по умолчанию 100%, виртуальные — 30%; ручная настройка сохраняется до перезапуска отдельно для каждой группы.<br/>Подключение телефона не нужно для физических входов; сама BT-плата с входами должна быть включена. Если за 4 секунды физические входы не определены, выбирается виртуальный джойстик с автоматическим разрешением после нейтрали. Он выключается при потере связи. После СТОП требуется явное возобновление. СТОП защёлкивает остановку для всех источников.</p></details></details><details id="moreDriveData"><summary>Подробнее: режим и лимиты</summary><div class="dash"><div class="c"><span>Режим</span><b id="d_mode">-</b></div><div class="c"><span>Imax, А</span><b id="d_imax">-</b></div><div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div></div><div class="wheel-setting"><span>Диаметр колеса, дюйм</span><input id="wheeld" max="30" min="4" step="0.1" style="width:100%" type="number"/></div></details><details id="selectedMetrics"><summary>Подробные показатели выбранной платы</summary><div aria-label="Основные показатели" class="dash main-metrics">
 <div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div><div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div><div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div><div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div><div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div><div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div><div class="c speed-card"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div></div></details></section></main><section aria-label="GPIO и датчики" id="gpioPanel"><label class="dual-view">Подробно / команды датчикам:<select id="viewNode"><option value="0">Плата у Bluetooth</option><option value="1">Вторая плата</option></select></label><p id="dualRpc" role="status"></p><h3>GPIO / датчики</h3>
 <div class="g3" style="grid-template-columns:1.2fr 1fr 1fr">
 <button class="s" id="pc12on" type="button">PC12 подсветка ВКЛ</button>
@@ -551,7 +552,7 @@ const control={source:0,pending:0,armed:false,waiting:false,error:0,valid:false,
 let requestedSource=null,sourceRequestedAt=0,jx=0,jy=0,virtualBusy=false,localMessage='';
 const joy=$('joy'),knob=$('knob');
 const sourceNames=['Виртуальный джойстик','Физический джойстик','Виртуальные педали','Физические педали'];
-const controlErrors={1:'Не удалось подтвердить режим выбранных STM32. Проверьте связь и состояние плат.',2:'STM32 отклонил смену режима.',3:'Нужна остановка и калибровка входов.',4:'Физический вход вне допустимого диапазона. Проверьте подключение и верните в нейтраль.',5:'Пропали виртуальные команды. Включите управление повторно.',6:'Ошибка записи flash: настройки действуют только до перезапуска.',7:'Остановите оба колеса.',8:'Реверс не подтверждён. Управление выключено; проверьте платы и разрешите заново.',9:'Стартовая проверка привода остановлена. Проверьте платы, выберите привод и источник вручную.'};
+const controlErrors={1:'Не удалось подтвердить режим выбранных STM32. Проверьте связь и состояние плат.',2:'STM32 отклонил смену режима.',3:'Нужна остановка и калибровка входов.',4:'Физический вход вне допустимого диапазона. Проверьте подключение и верните в нейтраль.',5:'Пропали виртуальные команды. Включите управление повторно.',6:'Ошибка записи flash: настройки действуют только до перезапуска.',7:'Остановите оба колеса.',8:'Реверс не подтверждён. Управление выключено; проверьте платы и разрешите заново.',9:'Автопривод заблокирован ошибкой или ручным СТОП. Проверьте платы; возобновление только явно.'};
 function freshControls(){return control.last>0&&performance.now()-control.last<1500}
 function isVirtual(){return control.source===0||control.source===2}
 function resetInputs(){jx=jy=0;$('vThr').value=$('vBrk').value='0';updatePedalText();drawKnob()}
@@ -578,13 +579,13 @@ function syncControls(){
  $('arm').textContent=control.armed?'Управление включено':control.waiting?'Ожидание нейтрали…':physical?'Возобновить после СТОП':'Разрешить управление';
  $('arm').disabled=$('arm').disabled||control.armed||control.waiting;
  $('jcalsave').disabled=control.stage!==2||!fresh;
- for(const id of ['vThr','vBrk'])$(id).disabled=!fresh||!control.armed||control.source!==2;
+ for(const id of ['vThr','vBrk'])$(id).disabled=!fresh||control.source!==2;
  $('pwr').disabled=!fresh||control.pending!==0;
  let message=!rx?'Подключитесь к Bluetooth-плате.':!fresh?'Нет свежего статуса источника. Проверьте BT-прошивку и связь со STM32.':requestedSource!==null||control.pending?'Переключение источника — управление выключено.':controlErrors[control.error]|| (control.stage===1?'Калибровка центра: отпустите ручку и не трогайте её.':control.stage===2?'Обведите все края, верните в центр и сохраните.':control.waiting?'Ожидание нейтрали 0,6 с.':control.armed?'Управление разрешено.':'Управление выключено.');
  if(rx&&fresh&&controlAuto.detect)message='Автоопределение: отпустите оба входа. Ожидаются стабильные напряжения около 0,8 В (педали) или 1,65 В (джойстик).';
  else if(rx&&fresh&&control.source===0&&controlAuto.virtualAllowed&&!control.pending&&!control.armed)message='Виртуальный джойстик выбран автоматически. Ожидание нейтрали и связи 0,6 с — отдельное разрешение не нужно.';
- else if(rx&&fresh&&physical&&controlAuto.allowed&&!control.pending&&!control.error&&!control.stage&&!control.armed)message='Автозапуск: верните входы в нейтраль и остановите колёса.';
- if(fresh&&window.bootUiPhase>=0&&window.bootUiPhase<2)message='Автозапуск: '+(window.bootUiPhase===0?'обнаружение и проверка плат…':'выбор привода и ожидание подтверждения…')+' Тяга выключена.';
+ else if(rx&&fresh&&physical&&controlAuto.allowed&&!control.pending&&!control.error&&!control.stage&&!control.armed)message='Автопривод: верните входы в нейтраль и остановите колёса.';
+ if(fresh&&window.bootUiPhase>=0&&window.bootUiPhase<2)message='Автопривод: '+(window.bootUiPhase===0?'ожидание нейтрали и остановки доступных колёс…':'выбор привода и ожидание подтверждения…')+' Тяга выключена.';
  if(fresh&&window.reverseUiPhase){message='Переключение направления: тяга временно снята.';$('arm').textContent='Тяга временно снята';}
  $('controlState').textContent=(fresh?(controlAuto.detect?'Тип ещё не определён':sourceNames[control.source])+'. ':'')+message+(localMessage?' '+localMessage:'');
  $('joyCalState').textContent=control.stage===1?'Шаг 1/2: центр, около 1 секунды стабильных измерений.':control.stage===2?'Шаг 2/2: пройдите все крайние положения и отпустите ручку.':control.valid?'Калибровка джойстика сохранена.':'До первой калибровки: центр около 1,65 В, диапазон 0–3,3 В, мёртвая зона 20%. Уточните диапазон калибровкой.';
@@ -599,7 +600,7 @@ function onControls(line){
  const [source,pending,armed,waiting,error,valid,stage,x,y,dead,inv,limit,...ranges]=v;
  const sourceChanged=source!==control.source;
  Object.assign(control,{source,pending,armed:!!armed,waiting:!!waiting,error,valid:!!valid,stage,last:performance.now()});
- if(sourceChanged||!armed&&!waiting)resetInputs();
+ if(sourceChanged)resetInputs(); // Do not fabricate neutral while a pointer is still held.
  if(source===1){jx=x/1000;jy=-y/1000;drawKnob();$('joyv').textContent='руль '+x+' · движение '+y}
  if(requestedSource===source&&pending===0){requestedSource=null;localMessage=''}
  if(document.activeElement!==$('deadzone')){$('deadzone').value=dead;$('dzText').textContent=dead}
@@ -626,11 +627,11 @@ $('stopControl').onclick=stopControls;
 $('autoPhysical').onclick=async()=>{resetInputs();await guardedSend('AUTO')};
 function disconnectControls(){window.reverseUiPhase=0;window.bootUiPhase=-1;resetInputs();control.last=0;control.armed=control.waiting=false;requestedSource=null;controlAuto.known=false;controlAuto.detect=false;controlAuto.allowed=false;controlAuto.virtualAllowed=false;syncControls()}
 function joyPos(e){
- if(control.source!==0||!control.armed||!freshControls())return;
+ if(control.source!==0||!freshControls())return;
  const r=joy.getBoundingClientRect(),R=r.width/2;let x=(e.clientX-r.left-R)/R,y=(e.clientY-r.top-R)/R;
  const d=Math.hypot(x,y);if(d>1){x/=d;y/=d}jx=x;jy=y;drawKnob();
 }
-joy.addEventListener('pointerdown',e=>{if(control.source===0&&control.armed){joy.setPointerCapture(e.pointerId);joyPos(e)}});
+joy.addEventListener('pointerdown',e=>{if(control.source===0&&freshControls()){joy.setPointerCapture(e.pointerId);joyPos(e)}});
 joy.addEventListener('pointermove',e=>{if(joy.hasPointerCapture(e.pointerId))joyPos(e)});
 function releaseStick(){if(control.source!==1){jx=jy=0;drawKnob()}}
 for(const event of ['pointerup','pointercancel','lostpointercapture'])joy.addEventListener(event,releaseStick);
@@ -794,7 +795,7 @@ dualReset();
 </script><script>
 window.reverseUiPhase=0;window.bootUiPhase=-1;
 const reverseOnLine=onLine;
-onLine=function(line){if(line.startsWith('#B,')){const p=line.split(',');const phase=+p[1];if(p.length===3&&Number.isInteger(phase)&&phase>=0&&phase<=3){window.bootUiPhase=phase;syncControls();}return;}if(line.startsWith('#R,')){const p=line.split(',');const phase=+p[1],target=+p[2];window.reverseUiPhase=phase;
+onLine=function(line){if(line.startsWith('#B,')){const p=line.split(',');const phase=+p[1];if((p.length===3||p.length===4)&&Number.isInteger(phase)&&phase>=0&&phase<=3){window.bootUiPhase=phase;const policy=p.length===4?+p[3]:0;$('drivePolicy').textContent=policy===1?'Ручной выбор оси — автоперевыбор выключен':policy===2?'Автопривод заблокирован — требуется явное возобновление':'Автопривод: одна / обе по связи и нейтрали';syncControls();}return;}if(line.startsWith('#R,')){const p=line.split(',');const phase=+p[1],target=+p[2];window.reverseUiPhase=phase;
  $('reverseInfo').textContent=phase?(phase===1?'Реверс: снимаю тягу…':phase===2?'Реверс: жду подтверждение плат…':'Направление '+(target?'назад':'вперёд')+' подтверждено. Отпустите педали в нейтраль на 0,6 с.'):'Реверс: два уверенных нажатия тормоза за 2 с на остановленном аппарате. Газ отпущен, СТОП не нужен.';
  $('reverseControl').textContent=phase?'Переключение направления…':'Вперёд / назад';
  return;}reverseOnLine(line);};
