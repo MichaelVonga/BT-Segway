@@ -187,7 +187,8 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 <label>Режим<select id="driveKind"><option value="0">Джойстик</option><option value="1">Педали</option></select></label>
 <label>Источник<select id="inputKind"><option value="0">Виртуальный</option><option value="1">Физический</option></select></label>
 </div><button class="s" id="autoPhysical" style="width:100%;margin-bottom:12px">Автоопределить физические входы</button><details id="controlHelp"><summary>Подробнее: автозапуск и безопасность</summary><p class="control-note">Сначала автоматически выбирается исправный привод. Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения. Физические входы: лимит по умолчанию 100%, виртуальные — 30%; ручная настройка сохраняется до перезапуска отдельно для каждой группы.<br/>Подключение телефона не нужно для физических входов; сама BT-плата с входами должна быть включена. Если за 4 секунды физические входы не определены, выбирается виртуальный джойстик с автоматическим разрешением после нейтрали. Он выключается при потере связи. После СТОП требуется явное возобновление. СТОП защёлкивает остановку для всех источников.</p></details></details><details id="moreDriveData"><summary>Подробнее: режим и лимиты</summary><div class="dash"><div class="c"><span>Режим</span><b id="d_mode">-</b></div><div class="c"><span>Imax, А</span><b id="d_imax">-</b></div><div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div></div><div class="wheel-setting"><span>Диаметр колеса, дюйм</span><input id="wheeld" max="30" min="4" step="0.1" style="width:100%" type="number"/></div></details><details id="selectedMetrics"><summary>Подробные показатели выбранной платы</summary><div aria-label="Основные показатели" class="dash main-metrics">
-<div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div><div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div><div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div><div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div><div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div><div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div><div class="c speed-card"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div></div></details></section></main><section aria-label="GPIO и датчики" id="gpioPanel"><label class="dual-view">Подробно / команды датчикам:<select id="viewNode"><option value="0">Плата у Bluetooth</option><option value="1">Вторая плата</option></select></label><p id="dualRpc" role="status"></p><h3>GPIO / датчики</h3>
+<div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div><div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div><div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div><div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div><div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div><div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div><div class="c speed-card"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div></div></details></section></main><section aria-label="GPIO и датчики" id="gpioPanel"><details id="driveDiagnostics" style="margin:12px 0"><summary>Диагностика последней остановки</summary><p id="driveDiagCurrent" style="font-size:14px;line-height:1.5">Текущее состояние: нет данных.</p><pre id="driveDiagSaved" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5">Сохранённого события пока нет.</pre><p id="driveDiagLink" style="font-size:14px;line-height:1.5">Счётчики обмена появятся после подключения.</p><button id="driveDiagCopy" class="s" style="width:100%">Скопировать диагностику</button></details>
+<label class="dual-view">Подробно / команды датчикам:<select id="viewNode"><option value="0">Плата у Bluetooth</option><option value="1">Вторая плата</option></select></label><p id="dualRpc" role="status"></p><h3>GPIO / датчики</h3>
 <div class="g3" style="grid-template-columns:1.2fr 1fr 1fr">
 <button class="s" id="pc12on" type="button">PC12 подсветка ВКЛ</button>
 <button class="x" id="pc12off" type="button">PC12 подсветка ВЫКЛ</button>
@@ -573,7 +574,7 @@ function syncControls(){
  $('joyHint').textContent=physical?'Положение физического джойстика. Круг на экране только показывает данные.':'Удерживайте джойстик. Отпускание — возврат команды в ноль.';
  joy.classList.toggle('on',fresh&&control.armed&&control.source===0);
  $('autoPhysical').disabled=!rx||!fresh||control.pending!==0||control.armed||control.waiting;
- $('arm').hidden=(physical&&(controlAuto.detect||controlAuto.allowed))||(control.source===0&&controlAuto.virtualAllowed);
+ $('arm').hidden=(fresh&&window.bootUiPhase>=0&&window.bootUiPhase<2&&window.driveAutoPolicy===0)||(physical&&(controlAuto.detect||controlAuto.allowed))||(control.source===0&&controlAuto.virtualAllowed);
  document.querySelector('.control-actions').style.gridTemplateColumns=$('arm').hidden?'1fr':'repeat(2,minmax(0,1fr))';
  $('arm').disabled=!rx||!fresh||control.pending!==0||requestedSource!==null||control.stage!==0||control.error===1||control.error===2;
  $('arm').textContent=control.armed?'Управление включено':control.waiting?'Ожидание нейтрали…':physical?'Возобновить после СТОП':'Разрешить управление';
@@ -586,6 +587,7 @@ function syncControls(){
  else if(rx&&fresh&&control.source===0&&controlAuto.virtualAllowed&&!control.pending&&!control.armed)message='Виртуальный джойстик выбран автоматически. Ожидание нейтрали и связи 0,6 с — отдельное разрешение не нужно.';
  else if(rx&&fresh&&physical&&controlAuto.allowed&&!control.pending&&!control.error&&!control.stage&&!control.armed)message='Автопривод: верните входы в нейтраль и остановите колёса.';
  if(fresh&&window.bootUiPhase>=0&&window.bootUiPhase<2)message='Автопривод: '+(window.bootUiPhase===0?'ожидание нейтрали и остановки доступных колёс…':'выбор привода и ожидание подтверждения…')+' Тяга выключена.';
+ if(fresh&&dualMeta&&(dualMeta.flags&16384)&&!control.error)message='Краткое ожидание готовности драйвера. Отпустите газ; тяга пока нулевая.';
  if(fresh&&window.reverseUiPhase){message='Переключение направления: тяга временно снята.';$('arm').textContent='Тяга временно снята';}
  $('controlState').textContent=(fresh?(controlAuto.detect?'Тип ещё не определён':sourceNames[control.source])+'. ':'')+message+(localMessage?' '+localMessage:'');
  $('joyCalState').textContent=control.stage===1?'Шаг 1/2: центр, около 1 секунды стабильных измерений.':control.stage===2?'Шаг 2/2: пройдите все крайние положения и отпустите ручку.':control.valid?'Калибровка джойстика сохранена.':'До первой калибровки: центр около 1,65 В, диапазон 0–3,3 В, мёртвая зона 20%. Уточните диапазон калибровкой.';
@@ -625,7 +627,7 @@ $('arm').onclick=async()=>{resetInputs();await virtualTick(true);await guardedSe
 async function stopControls(){resetInputs();control.armed=false;control.waiting=false;syncControls();if(rx)await guardedSend('STOP')}
 $('stopControl').onclick=stopControls;
 $('autoPhysical').onclick=async()=>{resetInputs();await guardedSend('AUTO')};
-function disconnectControls(){window.reverseUiPhase=0;window.bootUiPhase=-1;resetInputs();control.last=0;control.armed=control.waiting=false;requestedSource=null;controlAuto.known=false;controlAuto.detect=false;controlAuto.allowed=false;controlAuto.virtualAllowed=false;syncControls()}
+function disconnectControls(){window.reverseUiPhase=0;window.bootUiPhase=-1;window.driveAutoPolicy=0;resetInputs();control.last=0;control.armed=control.waiting=false;requestedSource=null;controlAuto.known=false;controlAuto.detect=false;controlAuto.allowed=false;controlAuto.virtualAllowed=false;syncControls()}
 function joyPos(e){
  if(control.source!==0||!freshControls())return;
  const r=joy.getBoundingClientRect(),R=r.width/2;let x=(e.clientX-r.left-R)/R,y=(e.clientY-r.top-R)/R;
@@ -674,7 +676,7 @@ const dualNodes=[{words:new Uint16Array(40),time:[0,0,0],uid:'—'},
                  {words:new Uint16Array(40),time:[0,0,0],uid:'—'}];
 let dualSelected=0,dualMeta=null,dualMetaAt=0,dualAssembly=null,dualBad=0;
 const dualSequences=[null,null,null,null],dualPacketAt=[0,0,0,0];
-const dualTripNames=['Нет блокировки','Обнаружена вторая плата: выберите привод','Потеря межплатной связи','Ошибка выбранной платы','Два BT-контроллера: движение запрещено','Перезапуск / смена платы','Не согласованы настройки','Задержка основного цикла','Потеря связи с BT-платой','Неизвестные данные на USART3','СТОП'];
+const dualTripNames=['Нет блокировки','Обнаружена вторая плата: выберите привод','Потеря межплатной связи','Зафиксирована ошибка контроллера','Два BT-контроллера: движение запрещено','Перезапуск / смена платы','Не согласованы настройки','Задержка основного цикла','Потеря связи с BT-платой','Ожидание корректного кадра USART3','СТОП','Ожидание готовности драйверов — отпустите управление'];
 function dualCrc(bytes){let c=65535;for(const b of bytes){c^=b<<8;for(let i=0;i<8;i++)c=((c&32768)?(c<<1)^0x1021:c<<1)&65535;}return c;}
 function dualSigned(x){return x&32768?x-65536:x;}
 function dualPresent(n){return dualMeta && performance.now()-dualMetaAt<1500 && (n===0||!!(dualMeta.flags&1));}
@@ -739,7 +741,8 @@ function dualRenderOverview(){
  const fresh=dualMeta&&performance.now()-dualMetaAt<1500,m=dualMeta;
  const modeNames={0:'Привод не выбран',1:'Только плата у BT',2:'Только вторая плата',3:'Обе платы'};
  $('dualMode').textContent=fresh?modeNames[m.mask]||'Неизвестный режим':'Ожидание v12';
- $('dualState').textContent=fresh?(dualTripNames[m.trip]||'Блокировка '+m.trip)+((m.flags&8)?' · готово':' · движение не разрешено'):'Нет свежего состояния шлюза';
+ $('dualState').textContent=fresh?(dualTripNames[m.trip]||'Блокировка '+m.trip)+((m.flags&16384)?' · краткое ожидание драйвера в нейтрали':(m.flags&8)?' · готово':' · движение не разрешено'):'Нет свежего состояния шлюза';
+ $('driveDiagCurrent').textContent=fresh?'Сейчас: '+(dualTripNames[m.trip]||'trip='+m.trip)+'; у BT: '+driveFaultText(m.fault,dualNodes[0].words[14])+'; вторая: '+((m.flags&1)?driveFaultText(m.peerFault,dualNodes[1].words[14]):'нет связи, состояние неизвестно'):'Текущее состояние: нет свежих данных.';
  $('dualStats').textContent=fresh?'Замены устаревших снимков BLE Q/raw/main/status: '+m.replaced.join('/')+' · пропуски текста: '+m.textDrops+' · ошибки сборки: '+dualBad:'Нет статистики';
  $('dualAlert').textContent=fresh&&m.trip?(dualTripNames[m.trip]||'Блокировка '+m.trip):'';
  $('dualAlert').hidden=!(fresh&&m.trip);
@@ -793,9 +796,27 @@ setInterval(()=>{dualRenderOverview();},250);
 dualReset();
 
 </script><script>
-window.reverseUiPhase=0;window.bootUiPhase=-1;
+let driveDiagKey='';
+function driveFaultText(bits,code){
+ const labels=['мотор L','мотор R','таймаут ADC','таймаут входа','температура','батарея'];
+ const reasons=labels.filter((_,i)=>bits&(1<<i));
+ function motor(v){const d=[];if(v&1)d.push('Холлы 000');if(v&2)d.push('Холлы 111');if(v&4)d.push('команда без вращения / блокировка');if(v&~7)d.push('другой код');return '0x'+v.toString(16)+(d.length?' ('+d.join(', ')+')':'');}
+ return (reasons.length?reasons.join(', '):bits?'fault 0x'+bits.toString(16):'fault=0')+'; L '+motor(code&255)+', R '+motor(code>>>8&255);
+}
+function driveDiagnosticLine(line){
+ if(line.startsWith('#X,')){
+  const p=line.split(',').slice(1).map(Number);if(p.length!==9||!p.every(v=>Number.isSafeInteger(v)&&v>=0))return;
+  const [seq,at,trip,lf,pf,le,pe,mask,flags]=p,key=p.join(',');
+  const text='Сохранённое событие №'+seq+'; через '+(at/1000).toFixed(2)+' с после запуска BT. Это история, не текущее разрешение.\n'+(dualTripNames[trip]||'trip='+trip)+' (trip='+trip+').\nУ BT: '+driveFaultText(lf,le)+'\nВторая: '+((flags&1)?driveFaultText(pf,pe):'не была доступна в этом снимке')+'\nМаска='+mask+'; flags=0x'+flags.toString(16)+'\n'+line;
+  $('driveDiagSaved').textContent=text;if(key!==driveDiagKey){driveDiagKey=key;log(text+'\n');}return;
+ }
+ const p=line.split(',').slice(1).map(Number);if(p.length!==6||!p.every(v=>Number.isSafeInteger(v)&&v>=0))return;
+ $('driveDiagLink').textContent='BT '+(p[0]/1000).toFixed(1)+' с; UART RX '+p[1]+' байт; верных кадров '+p[2]+'; CRC/парсер '+p[3]+'; UART/переполнения '+p[4]+'; отброшено строк BLE '+p[5]+'. Счётчики накопительные.';
+}
+$('driveDiagCopy').onclick=async()=>{const text=[$('driveDiagCurrent').textContent,$('driveDiagSaved').textContent,$('driveDiagLink').textContent].join('\n');try{await navigator.clipboard.writeText(text);$('driveDiagCopy').textContent='Диагностика скопирована';}catch(e){$('driveDiagCopy').textContent='Скопируйте текст выше вручную';}};
+window.reverseUiPhase=0;window.bootUiPhase=-1;window.driveAutoPolicy=0;
 const reverseOnLine=onLine;
-onLine=function(line){if(line.startsWith('#B,')){const p=line.split(',');const phase=+p[1];if((p.length===3||p.length===4)&&Number.isInteger(phase)&&phase>=0&&phase<=3){window.bootUiPhase=phase;const policy=p.length===4?+p[3]:0;$('drivePolicy').textContent=policy===1?'Ручной выбор оси — автоперевыбор выключен':policy===2?'Автопривод заблокирован — требуется явное возобновление':'Автопривод: одна / обе по связи и нейтрали';syncControls();}return;}if(line.startsWith('#R,')){const p=line.split(',');const phase=+p[1],target=+p[2];window.reverseUiPhase=phase;
+onLine=function(line){if(line.startsWith('#X,')||line.startsWith('#U,')){driveDiagnosticLine(line);return;}if(line.startsWith('#B,')){const p=line.split(',');const phase=+p[1];if((p.length===3||p.length===4)&&Number.isInteger(phase)&&phase>=0&&phase<=3){window.bootUiPhase=phase;const policy=p.length===4?+p[3]:0;window.driveAutoPolicy=policy;$('drivePolicy').textContent=policy===1?'Ручной выбор оси — автоперевыбор выключен':policy===2?'Автопривод заблокирован — требуется явное возобновление':'Автопривод: одна / обе по связи и нейтрали';syncControls();}return;}if(line.startsWith('#R,')){const p=line.split(',');const phase=+p[1],target=+p[2];window.reverseUiPhase=phase;
  $('reverseInfo').textContent=phase?(phase===1?'Реверс: снимаю тягу…':phase===2?'Реверс: жду подтверждение плат…':'Направление '+(target?'назад':'вперёд')+' подтверждено. Отпустите педали в нейтраль на 0,6 с.'):'Реверс: два уверенных нажатия тормоза за 2 с на остановленном аппарате. Газ отпущен, СТОП не нужен.';
  $('reverseControl').textContent=phase?'Переключение направления…':'Вперёд / назад';
  return;}reverseOnLine(line);};
