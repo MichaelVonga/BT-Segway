@@ -131,12 +131,13 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 #dualOverview{display:grid;gap:6px;margin:6px 0}.dual-node{border:1px solid #555;border-radius:8px;background:#202020;padding:8px 10px;min-width:0}.dual-node.selected{border-color:#72bc8f}.dual-node>b{font-size:14px}.dual-node>span{float:right;font-size:14px}.dual-node small{display:block;font:12px monospace;color:#b9bec6;overflow-wrap:anywhere;margin:2px 0}.dual-values{display:grid;grid-template-columns:1fr 1.6fr;gap:6px;font-size:14px;color:#c6c8cd}.dual-values strong{display:block;color:#fff;font-size:22px;line-height:1.2;font-variant-numeric:tabular-nums}.dual-node p{font-size:14px;line-height:1.3;margin:4px 0}.dual-node p[id$=sensors]{display:none}
 #dualSelection p,#dualAllData p{font-size:14px;line-height:1.5;margin:8px}.dual-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.dual-buttons button{font-size:14px;min-height:48px}.dual-view{display:block;font-size:14px;margin:12px 0 6px}.dual-view select{display:block;width:100%;font-size:16px;min-height:44px;background:#292929;color:#fff;margin-top:6px}.dual-table{overflow:auto}.dual-table table{border-collapse:collapse;width:100%;font-size:14px}.dual-table th,.dual-table td{padding:6px;border-bottom:1px solid #444;text-align:left;overflow-wrap:anywhere}#dualAllData,#dualSelection{overflow-wrap:anywhere}#limpConfirm{width:24px;height:24px;flex-shrink:0}#dualSelection .check-label{align-items:flex-start;line-height:1.5;margin:12px 4px}.dual-node>span{max-width:46%;overflow-wrap:anywhere}
 @media(max-height:700px) and (max-width:739px){.dual-node{padding:5px 8px}.dual-node small{display:none}.dual-node p{font-size:14px;margin:2px 0}.dual-values strong{font-size:20px}}
+#mainDriveMetrics{margin:8px 0}#mainDriveMetrics .dash{margin:0 0 8px}#moreDriveData .wheel-setting{padding:0 10px}#saveWheel{width:100%;min-height:44px}#main_mode{font-size:20px}#mainDriveMetrics .speed-card span{font-size:14px;line-height:1.3}
 </style></head><body><button id="con">Подключиться к NB-BT</button><main id="driveLayout"><section aria-label="Показатели во время управления" id="driveTelemetry"><div id="link">Плата сигвея: нет данных</div>
 <p hidden="" id="dualAlert" role="status"></p>
 <div id="dualOverview">
 <div class="dual-node" id="node0card"><b>Плата у Bluetooth</b><span id="node0state">—</span><small id="node0uid">—</small><div class="dual-values"><div>Батарея, В<strong id="node0bat">—</strong></div><div>Обороты L / R<strong id="node0rpm">—</strong></div></div><p id="node0other">—</p><p id="node0sensors">—</p></div>
 <div class="dual-node" id="node1card"><b>Вторая плата</b><span id="node1state">—</span><small id="node1uid">—</small><div class="dual-values"><div>Батарея, В<strong id="node1bat">—</strong></div><div>Обороты L / R<strong id="node1rpm">—</strong></div></div><p id="node1other">—</p><p id="node1sensors">—</p></div>
-</div>
+</div><section aria-label="Скорость, режим и лимиты главной платы" id="mainDriveMetrics"><div class="dash main-metrics"><div class="c speed-card"><span>Скорость, км/ч<br/>по медленному колесу платы у BT</span><b id="main_kmh">—</b></div><div class="c"><span>Режим</span><b id="main_mode">—</b></div><div class="c"><span>Imax, А</span><b id="main_imax">—</b></div><div class="c"><span>Nmax, об/мин</span><b id="main_nmax">—</b></div></div><details id="moreDriveData"><summary>Настройки: диаметр колеса</summary><div class="wheel-setting"><label for="wheeld">Диаметр колеса, дюймы</label><input id="wheeld" inputmode="decimal" max="30" min="4" step="0.1" type="number"/><button class="s" id="saveWheel" type="button">Сохранить диаметр</button><p id="wheelStatus" role="status" style="font-size:14px;line-height:1.5">По умолчанию 10,5″. Сохраняется в этом браузере.</p></div></details></section>
 <details id="dualSelection"><summary>Привод: <span id="dualMode">Ожидание v12</span></summary>
 <p id="drivePolicy">Автоматический состав привода</p>
 <p id="dualState" role="status">Ожидание шлюза</p>
@@ -144,7 +145,6 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 <div class="dual-buttons"><button disabled="" id="drive3">Обе платы</button><button class="s" disabled="" id="drive1">Только у BT</button><button class="s" disabled="" id="drive2">Только вторая</button></div>
 <label class="check-label"><input id="limpConfirm" type="checkbox"/>Проверил: отключаемая ось не мешает движению. На одной плате еду только с безопасной ограниченной нагрузкой.</label>
 <p id="dualChoiceResult" role="status"></p>
-
 </details>
 </section><section aria-labelledby="controlHeading" class="controls-card">
 <div hidden="" id="hcm"></div>
@@ -167,7 +167,7 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 <div class="c"><span id="rawLabelB">Тормоз</span><b id="p_brk">—</b><div class="bar"><i id="p_brkb" style="background:#c63"></i></div><span id="p_brkr"></span></div>
 </div><div id="p_st" style="font-size:14px;margin-top:8px"></div>
 </div>
-<button class="m" hidden="" id="reverseControl">Вперёд / назад</button><p id="reverseInfo" class="control-note">Реверс: два уверенных нажатия и отпускания тормоза за 2 с, аппарат остановлен, газ отпущен. Направление общее; после подтверждения выбранных плат отпустите педали в нейтраль на 0,6 с. СТОП нажимать не нужно.</p>
+<button class="m" hidden="" id="reverseControl">Вперёд / назад</button><p class="control-note" id="reverseInfo">Реверс: два уверенных нажатия и отпускания тормоза за 2 с, аппарат остановлен, газ отпущен. Направление общее; после подтверждения выбранных плат отпустите педали в нейтраль на 0,6 с. СТОП нажимать не нужно.</p>
 <details hidden="" id="physicalCalibration"><summary>Калибровка физических входов</summary>
 <div hidden="" id="pedalCalibration">
 <details><summary>Подробнее: калибровка педалей</summary><p class="control-note">Нажмите «Начать», плавно нажмите обе педали до упора и отпустите. Затем сохраните. На калибровке команды моторам нулевые.</p></details>
@@ -186,8 +186,8 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 <details id="controlOptions"><summary>Источник управления и автоопределение</summary><div class="control-selects">
 <label>Режим<select id="driveKind"><option value="0">Джойстик</option><option value="1">Педали</option></select></label>
 <label>Источник<select id="inputKind"><option value="0">Виртуальный</option><option value="1">Физический</option></select></label>
-</div><button class="s" id="autoPhysical" style="width:100%;margin-bottom:12px">Автоопределить физические входы</button><details id="controlHelp"><summary>Подробнее: автозапуск и безопасность</summary><p class="control-note">Сначала автоматически выбирается исправный привод. Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения. Физические входы: лимит по умолчанию 100%, виртуальные — 30%; ручная настройка сохраняется до перезапуска отдельно для каждой группы.<br/>Подключение телефона не нужно для физических входов; сама BT-плата с входами должна быть включена. Если за 4 секунды физические входы не определены, выбирается виртуальный джойстик с автоматическим разрешением после нейтрали. Он выключается при потере связи. После СТОП требуется явное возобновление. СТОП защёлкивает остановку для всех источников.</p></details></details><details id="moreDriveData"><summary>Подробнее: режим и лимиты</summary><div class="dash"><div class="c"><span>Режим</span><b id="d_mode">-</b></div><div class="c"><span>Imax, А</span><b id="d_imax">-</b></div><div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div></div><div class="wheel-setting"><span>Диаметр колеса, дюйм</span><input id="wheeld" max="30" min="4" step="0.1" style="width:100%" type="number"/></div></details><details id="selectedMetrics"><summary>Подробные показатели выбранной платы</summary><div aria-label="Основные показатели" class="dash main-metrics">
-<div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div><div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div><div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div><div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div><div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div><div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div><div class="c speed-card"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div></div></details></section></main><section aria-label="GPIO и датчики" id="gpioPanel"><details id="driveDiagnostics" style="margin:12px 0"><summary>Диагностика последней остановки</summary><p id="driveDiagCurrent" style="font-size:14px;line-height:1.5">Текущее состояние: нет данных.</p><pre id="driveDiagSaved" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5">Сохранённого события пока нет.</pre><p id="driveDiagLink" style="font-size:14px;line-height:1.5">Счётчики обмена появятся после подключения.</p><button id="driveDiagCopy" class="s" style="width:100%">Скопировать диагностику</button></details>
+</div><button class="s" id="autoPhysical" style="width:100%;margin-bottom:12px">Автоопределить физические входы</button><details id="controlHelp"><summary>Подробнее: автозапуск и безопасность</summary><p class="control-note">Сначала автоматически выбирается исправный привод. Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения. Физические входы: лимит по умолчанию 100%, виртуальные — 30%; ручная настройка сохраняется до перезапуска отдельно для каждой группы.<br/>Подключение телефона не нужно для физических входов; сама BT-плата с входами должна быть включена. Если за 4 секунды физические входы не определены, выбирается виртуальный джойстик с автоматическим разрешением после нейтрали. Он выключается при потере связи. После СТОП требуется явное возобновление. СТОП защёлкивает остановку для всех источников.</p></details></details><details id="selectedMetrics"><summary>Подробные показатели выбранной платы</summary><div aria-label="Основные показатели" class="dash main-metrics">
+<div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div><div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div><div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div><div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div><div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div><div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div><div class="c speed-card"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div></div><div class="dash"><div class="c"><span>Режим</span><b id="d_mode">-</b></div><div class="c"><span>Imax, А</span><b id="d_imax">-</b></div><div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div></div></details></section></main><section aria-label="GPIO и датчики" id="gpioPanel"><details id="driveDiagnostics" style="margin:12px 0"><summary>Диагностика последней остановки</summary><p id="driveDiagCurrent" style="font-size:14px;line-height:1.5">Текущее состояние: нет данных.</p><pre id="driveDiagSaved" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5">Сохранённого события пока нет.</pre><p id="driveDiagLink" style="font-size:14px;line-height:1.5">Счётчики обмена появятся после подключения.</p><button class="s" id="driveDiagCopy" style="width:100%">Скопировать диагностику</button></details>
 <label class="dual-view">Подробно / команды датчикам:<select id="viewNode"><option value="0">Плата у Bluetooth</option><option value="1">Вторая плата</option></select></label><p id="dualRpc" role="status"></p><h3>GPIO / датчики</h3>
 <div class="g3" style="grid-template-columns:1.2fr 1fr 1fr">
 <button class="s" id="pc12on" type="button">PC12 подсветка ВКЛ</button>
@@ -456,10 +456,20 @@ async function send(c){
 
 function step(id,d){const e=$(id);e.value=Math.max(+e.min,Math.min(+e.max,(+e.value||0)+d))}
 // Скорость: об/мин колеса -> км/ч. Диаметр хранится в браузере (localStorage), по умолчанию 10.5"
-let wheelD=parseFloat(localStorage.getItem('wheelD'))||10.5;
+let wheelD=10.5;
+try{const saved=Number(localStorage.getItem('wheelD'));if(Number.isFinite(saved)&&saved>=4&&saved<=30)wheelD=saved;}catch(e){}
 function kmh(rpm){return rpm*Math.PI*wheelD*0.0254*60/1000}
 $('wheeld').value=wheelD;
-$('wheeld').onchange=e=>{const v=parseFloat(e.target.value);if(v>=4&&v<=30){wheelD=v;localStorage.setItem('wheelD',v)}else e.target.value=wheelD};
+function saveWheelDiameter(){
+ const v=Number($('wheeld').value);
+ if(!Number.isFinite(v)||v<4||v>30){$('wheelStatus').textContent='Введите диаметр от 4 до 30 дюймов.';$('wheeld').value=wheelD;return;}
+ wheelD=v;
+ try{localStorage.setItem('wheelD',String(v));$('wheelStatus').textContent='Сохранено: '+String(v).replace('.',',')+'″ — в этом браузере.';}
+ catch(e){$('wheelStatus').textContent='Применено: '+v+'″. Браузер запретил сохранение; после закрытия значение может сброситься.';}
+ dualRenderOverview();dualRenderSelected(2);
+}
+$('wheeld').onchange=saveWheelDiameter;
+$('saveWheel').onclick=saveWheelDiameter;
 // MCU attitude protocol v1. No gyro integration or calibration in JavaScript.
 // q rotates sensor/body into a Z-up world; CSS Y points down: S*R(q)*S.
 const imu={source:[1,0,0,0],q:[1,0,0,0],flags:0,seq:null,ms:null,last:0,ready:false,yawOffset:0};
@@ -738,6 +748,11 @@ function dualRenderSelected(type=-1){
  }
 }
 function dualRenderOverview(){
+ const main=dualFresh(0,2),w0=dualNodes[0].words;
+ $('main_kmh').textContent=main?kmh(Math.min(Math.abs(dualSigned(w0[4])),Math.abs(dualSigned(w0[3])))).toFixed(1):'—';
+ $('main_mode').textContent=main?(w0[8]===2?'FOC-'+(MOD[w0[9]]||w0[9]):(TYP[w0[8]]||w0[8])):'—';
+ $('main_imax').textContent=main?(dualSigned(w0[10])/10).toFixed(1):'—';
+ $('main_nmax').textContent=main?String(dualSigned(w0[11])):'—';
  const fresh=dualMeta&&performance.now()-dualMetaAt<1500,m=dualMeta;
  const modeNames={0:'Привод не выбран',1:'Только плата у BT',2:'Только вторая плата',3:'Обе платы'};
  $('dualMode').textContent=fresh?modeNames[m.mask]||'Неизвестный режим':'Ожидание v12';
