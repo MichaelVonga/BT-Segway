@@ -132,20 +132,14 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 #dualSelection p,#dualAllData p{font-size:14px;line-height:1.5;margin:8px}.dual-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.dual-buttons button{font-size:14px;min-height:48px}.dual-view{display:block;font-size:14px;margin:12px 0 6px}.dual-view select{display:block;width:100%;font-size:16px;min-height:44px;background:#292929;color:#fff;margin-top:6px}.dual-table{overflow:auto}.dual-table table{border-collapse:collapse;width:100%;font-size:14px}.dual-table th,.dual-table td{padding:6px;border-bottom:1px solid #444;text-align:left;overflow-wrap:anywhere}#dualAllData,#dualSelection{overflow-wrap:anywhere}#limpConfirm{width:24px;height:24px;flex-shrink:0}#dualSelection .check-label{align-items:flex-start;line-height:1.5;margin:12px 4px}.dual-node>span{max-width:46%;overflow-wrap:anywhere}
 @media(max-height:700px) and (max-width:739px){.dual-node{padding:5px 8px}.dual-node small{display:none}.dual-node p{font-size:14px;margin:2px 0}.dual-values strong{font-size:20px}}
 #mainDriveMetrics{margin:8px 0}#mainDriveMetrics .dash{margin:0 0 8px}#moreDriveData .wheel-setting{padding:0 10px}#saveWheel{width:100%;min-height:44px}#main_mode{font-size:20px}#mainDriveMetrics .speed-card span{font-size:14px;line-height:1.3}
+#driveOptions{margin:12px 0}#driveOptions>details{margin:8px 0}#driveOptions .wheel-setting{padding:0 10px}
 </style></head><body><button id="con">Подключиться к NB-BT</button><main id="driveLayout"><section aria-label="Показатели во время управления" id="driveTelemetry"><div id="link">Плата сигвея: нет данных</div>
 <p hidden="" id="dualAlert" role="status"></p>
 <div id="dualOverview">
 <div class="dual-node" id="node0card"><b>Плата у Bluetooth</b><span id="node0state">—</span><small id="node0uid">—</small><div class="dual-values"><div>Батарея, В<strong id="node0bat">—</strong></div><div>Обороты L / R<strong id="node0rpm">—</strong></div></div><p id="node0other">—</p><p id="node0sensors">—</p></div>
 <div class="dual-node" id="node1card"><b>Вторая плата</b><span id="node1state">—</span><small id="node1uid">—</small><div class="dual-values"><div>Батарея, В<strong id="node1bat">—</strong></div><div>Обороты L / R<strong id="node1rpm">—</strong></div></div><p id="node1other">—</p><p id="node1sensors">—</p></div>
-</div><section aria-label="Скорость, режим и лимиты главной платы" id="mainDriveMetrics"><div class="dash main-metrics"><div class="c speed-card"><span>Скорость, км/ч<br/>по медленному колесу платы у BT</span><b id="main_kmh">—</b></div><div class="c"><span>Режим</span><b id="main_mode">—</b></div><div class="c"><span>Imax, А</span><b id="main_imax">—</b></div><div class="c"><span>Nmax, об/мин</span><b id="main_nmax">—</b></div></div><details id="moreDriveData"><summary>Настройки: диаметр колеса</summary><div class="wheel-setting"><label for="wheeld">Диаметр колеса, дюймы</label><input id="wheeld" inputmode="decimal" max="30" min="4" step="0.1" type="number"/><button class="s" id="saveWheel" type="button">Сохранить диаметр</button><p id="wheelStatus" role="status" style="font-size:14px;line-height:1.5">По умолчанию 10,5″. Сохраняется в этом браузере.</p></div></details></section>
-<details id="dualSelection"><summary>Привод: <span id="dualMode">Ожидание v12</span></summary>
-<p id="drivePolicy">Автоматический состав привода</p>
-<p id="dualState" role="status">Ожидание шлюза</p>
-<p>Автопривод: вторая плата появилась — обе оси; связь пропала — только у BT; восстановилась — обе. Перед сменой ждём нейтраль и остановку доступных колёс, затем подтверждение и ещё 0,6 с нейтрали. Ошибка мотора любой доступной платы или ручной СТОП блокируют автоматическое возобновление. Скорость недоступной оси неизвестна: её свободное вращение не гарантируется. Ручной выбор ниже отключает автоматический перевыбор до перезапуска BT. Ограничения тока и оборотов сохраняются.</p>
-<div class="dual-buttons"><button disabled="" id="drive3">Обе платы</button><button class="s" disabled="" id="drive1">Только у BT</button><button class="s" disabled="" id="drive2">Только вторая</button></div>
-<label class="check-label"><input id="limpConfirm" type="checkbox"/>Проверил: отключаемая ось не мешает движению. На одной плате еду только с безопасной ограниченной нагрузкой.</label>
-<p id="dualChoiceResult" role="status"></p>
-</details>
+</div><section aria-label="Скорость, режим и лимиты главной платы" id="mainDriveMetrics"><div class="dash main-metrics"><div class="c speed-card"><span>Скорость, км/ч<br/>по медленному колесу платы у BT</span><b id="main_kmh">—</b></div><div class="c"><span>Режим</span><b id="main_mode">—</b></div><div class="c"><span>Imax, А</span><b id="main_imax">—</b></div><div class="c"><span>Nmax, об/мин</span><b id="main_nmax">—</b></div></div></section>
+
 </section><section aria-labelledby="controlHeading" class="controls-card">
 <div hidden="" id="hcm"></div>
 <h3 class="sr-only" id="controlHeading">Управление</h3>
@@ -187,7 +181,14 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 <label>Режим<select id="driveKind"><option value="0">Джойстик</option><option value="1">Педали</option></select></label>
 <label>Источник<select id="inputKind"><option value="0">Виртуальный</option><option value="1">Физический</option></select></label>
 </div><button class="s" id="autoPhysical" style="width:100%;margin-bottom:12px">Автоопределить физические входы</button><details id="controlHelp"><summary>Подробнее: автозапуск и безопасность</summary><p class="control-note">Сначала автоматически выбирается исправный привод. Физические входы определяются при запуске и включаются после стабильной нейтрали — без телефона и отдельного разрешения. На запуске отпустите педали или ручку! Тип фиксируется до перезапуска или повторного автоопределения. Физические входы: лимит по умолчанию 100%, виртуальные — 30%; ручная настройка сохраняется до перезапуска отдельно для каждой группы.<br/>Подключение телефона не нужно для физических входов; сама BT-плата с входами должна быть включена. Если за 4 секунды физические входы не определены, выбирается виртуальный джойстик с автоматическим разрешением после нейтрали. Он выключается при потере связи. После СТОП требуется явное возобновление. СТОП защёлкивает остановку для всех источников.</p></details></details><details id="selectedMetrics"><summary>Подробные показатели выбранной платы</summary><div aria-label="Основные показатели" class="dash main-metrics">
-<div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div><div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div><div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div><div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div><div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div><div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div><div class="c speed-card"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div></div><div class="dash"><div class="c"><span>Режим</span><b id="d_mode">-</b></div><div class="c"><span>Imax, А</span><b id="d_imax">-</b></div><div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div></div></details></section></main><section aria-label="GPIO и датчики" id="gpioPanel"><details id="driveDiagnostics" style="margin:12px 0"><summary>Диагностика последней остановки</summary><p id="driveDiagCurrent" style="font-size:14px;line-height:1.5">Текущее состояние: нет данных.</p><pre id="driveDiagSaved" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5">Сохранённого события пока нет.</pre><p id="driveDiagLink" style="font-size:14px;line-height:1.5">Счётчики обмена появятся после подключения.</p><button class="s" id="driveDiagCopy" style="width:100%">Скопировать диагностику</button></details>
+<div class="c"><span>Батарея, В</span><b id="d_bat">-</b></div><div class="c"><span>Левое, об/мин</span><b id="d_l">-</b></div><div class="c"><span>Правое, об/мин</span><b id="d_r">-</b></div><div class="c"><span>Темп., °C</span><b id="d_temp">-</b></div><div class="c"><span>Ток DC, А</span><b id="d_dc">-</b></div><div class="c"><span>Мотор / ошибки</span><b id="d_en">-</b></div><div class="c speed-card"><span>Скорость, км/ч (по медленному колесу)</span><b id="d_kmh" style="font-size:28px">-</b></div></div><div class="dash"><div class="c"><span>Режим</span><b id="d_mode">-</b></div><div class="c"><span>Imax, А</span><b id="d_imax">-</b></div><div class="c"><span>Nmax, об/мин</span><b id="d_nmax">-</b></div></div></details></section></main><section aria-label="Настройки колеса и привода" id="driveOptions"><details id="moreDriveData"><summary>Настройки: диаметр колеса</summary><div class="wheel-setting"><label for="wheeld">Диаметр колеса, дюймы</label><input id="wheeld" inputmode="decimal" max="30" min="4" step="0.1" type="number"/><button class="s" id="saveWheel" type="button">Сохранить диаметр</button><p id="wheelStatus" role="status" style="font-size:14px;line-height:1.5">По умолчанию 10,5″. Сохраняется в этом браузере.</p></div></details><details id="dualSelection"><summary>Привод: <span id="dualMode">Ожидание v12</span></summary>
+<p id="drivePolicy">Автоматический состав привода</p>
+<p id="dualState" role="status">Ожидание шлюза</p>
+<p>Автопривод: вторая плата появилась — обе оси; связь пропала — только у BT; восстановилась — обе. Перед сменой ждём нейтраль и остановку доступных колёс, затем подтверждение и ещё 0,6 с нейтрали. Ошибка мотора любой доступной платы или ручной СТОП блокируют автоматическое возобновление. Скорость недоступной оси неизвестна: её свободное вращение не гарантируется. Ручной выбор ниже отключает автоматический перевыбор до перезапуска BT. Ограничения тока и оборотов сохраняются.</p>
+<div class="dual-buttons"><button disabled="" id="drive3">Обе платы</button><button class="s" disabled="" id="drive1">Только у BT</button><button class="s" disabled="" id="drive2">Только вторая</button></div>
+<label class="check-label"><input id="limpConfirm" type="checkbox"/>Проверил: отключаемая ось не мешает движению. На одной плате еду только с безопасной ограниченной нагрузкой.</label>
+<p id="dualChoiceResult" role="status"></p>
+</details></section><section aria-label="GPIO и датчики" id="gpioPanel"><details id="driveDiagnostics" style="margin:12px 0"><summary>Диагностика последней остановки</summary><p id="driveDiagCurrent" style="font-size:14px;line-height:1.5">Текущее состояние: нет данных.</p><pre id="driveDiagSaved" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5">Сохранённого события пока нет.</pre><p id="driveDiagLink" style="font-size:14px;line-height:1.5">Счётчики обмена появятся после подключения.</p><button class="s" id="driveDiagCopy" style="width:100%">Скопировать диагностику</button></details>
 <label class="dual-view">Подробно / команды датчикам:<select id="viewNode"><option value="0">Плата у Bluetooth</option><option value="1">Вторая плата</option></select></label><p id="dualRpc" role="status"></p><h3>GPIO / датчики</h3>
 <div class="g3" style="grid-template-columns:1.2fr 1fr 1fr">
 <button class="s" id="pc12on" type="button">PC12 подсветка ВКЛ</button>
@@ -271,7 +272,7 @@ summary:focus-visible{outline:3px solid #88bfff;outline-offset:2px}
 <label for="axisMap">Монтаж: поворот датчика вокруг Z относительно модели</label>
 <select id="axisMap"><option value="0">0°: X вправо, Y к верхнему краю модели</option><option value="90">+90°: X к верхнему краю, Y влево</option><option value="180">180°: X влево, Y к нижнему краю</option><option value="270">270°: X к нижнему краю, Y вправо</option></select>
 <p>Ориентация рассчитывается на STM32 по акселерометру и гироскопу. Страница отображает готовый кватернион; отдельного переключателя слияния больше нет.</p>
-<p>При запуске платы начинается автокалибровка. Повторную калибровку с этой страницы запускайте только после СТОП. Оставьте плату неподвижной примерно на 4 секунды в любом положении, без вибраций. При движении окно измерений начинается заново. Медленное равномерное вращение может быть принято за смещение нуля. В STM32 v10.5 предел сырых показаний до вычитания нуля — 30°/с по модулю вектора; проверки стабильности сохранены.</p>
+<p>При запуске платы начинается автокалибровка. Повторную калибровку с этой страницы запускайте только после СТОП. Оставьте плату неподвижной на 2–3 секунды в любом положении, без вибраций. При движении окно измерений начинается заново. Медленное равномерное вращение может быть принято за смещение нуля. Предел сырых показаний при калибровке — 30°/с по модулю вектора; проверки стабильности сохранены. После калибровки устойчивый остаток до 1°/с может подавляться как дрейф. Очень медленный настоящий поворот тоже может подавляться. Статус ниже показывает, активно ли удержание покоя.</p>
 <div class="imu-actions"><button class="s" id="gyroZeroBtn" type="button">Калибровать гироскоп</button></div>
 <p id="gyroZeroStatus" role="status">Ожидание подключения.</p>
 <p>gx/gy/gz — скорость с вычтенным нулём после калибровки. Курс относительный: без магнитометра остаточный дрейф возможен. Кнопка ниже задаёт нулевой курс только для модели, не меняя наклон и прошивку.</p>
@@ -339,6 +340,7 @@ function onLine(s){
  } else if(s.startsWith('#G,'))onGpio(s.split(',').slice(1).map(Number));
  else if(s.startsWith('#P,'))onPed(s.split(',').slice(1).map(Number));
  else if(s.startsWith('#C,'))onCal(s.split(',').slice(1));
+ else if(s.startsWith('#UI,')){const p=s.split(',');log('Настройка: '+(+p[2]===0?'принята':'не принята / нет подтверждения')+'\n')}
  else if(s.startsWith('#A,')){const e=+s.slice(3);log('Плата: '+(ERR[e]||('ошибка '+e))+'\n')}
  else if(s.startsWith('#L,')){setLink(s[3]=='1')}
  else log(s+'\n');
@@ -460,13 +462,14 @@ let wheelD=10.5;
 try{const saved=Number(localStorage.getItem('wheelD'));if(Number.isFinite(saved)&&saved>=4&&saved<=30)wheelD=saved;}catch(e){}
 function kmh(rpm){return rpm*Math.PI*wheelD*0.0254*60/1000}
 $('wheeld').value=wheelD;
+function wheelFeedback(ok){if(rx)send('UIBEEP='+(ok?0:1)).catch(()=>{});}
 function saveWheelDiameter(){
  const v=Number($('wheeld').value);
- if(!Number.isFinite(v)||v<4||v>30){$('wheelStatus').textContent='Введите диаметр от 4 до 30 дюймов.';$('wheeld').value=wheelD;return;}
- wheelD=v;
+ if(!Number.isFinite(v)||v<4||v>30){$('wheelStatus').textContent='Введите диаметр от 4 до 30 дюймов.';$('wheeld').value=wheelD;wheelFeedback(false);return;}
+ wheelD=v;let saved=true;
  try{localStorage.setItem('wheelD',String(v));$('wheelStatus').textContent='Сохранено: '+String(v).replace('.',',')+'″ — в этом браузере.';}
- catch(e){$('wheelStatus').textContent='Применено: '+v+'″. Браузер запретил сохранение; после закрытия значение может сброситься.';}
- dualRenderOverview();dualRenderSelected(2);
+ catch(e){saved=false;$('wheelStatus').textContent='Применено: '+v+'″. Браузер запретил сохранение; после закрытия значение может сброситься.';}
+ dualRenderOverview();dualRenderSelected(2);wheelFeedback(saved);
 }
 $('wheeld').onchange=saveWheelDiameter;
 $('saveWheel').onclick=saveWheelDiameter;
@@ -521,13 +524,13 @@ function syncImuStatus(){
  else if(imu.flags&8)text='автокалибровка — оставьте плату неподвижной';
  else if(!(imu.flags&2))text='ожидание измерений';
  else if(!(imu.flags&4))text='только наклон — нужна калибровка';
- else text='слияние на STM32 · курс относительный';
+ else text='слияние на STM32 · курс относительный'+(imu.flags&512?' · удержание в покое активно':'');
  if(imu.flags&16)text+=' · предел скорости гироскопа';
  if(imu.flags&32)text+=' · пропуск измерений, возможна ошибка курса';
  $('imuMode').textContent='IMU: '+text;
  const reasons=['набираются стабильные измерения','паузы между измерениями больше 30 мс','ускорение вне 0.85–1.15 g','сырые показания гироскопа выше допустимого предела калибровки','меняются показания акселерометра','нестабильные показания гироскопа'];
  const reason=(imu.flags>>6)&7;
- $('gyroZeroStatus').textContent=imu.flags&8?'Калибровка на плате: '+(reasons[reason]||'ожидание измерений')+'.':imu.flags&4?'Ноль гироскопа откалиброван на STM32.':'Ожидание калибровки на STM32.';
+ $('gyroZeroStatus').textContent=imu.flags&8?'Калибровка на плате: '+(reasons[reason]||'ожидание измерений')+'.':imu.flags&4?('Ноль гироскопа откалиброван на STM32.'+(imu.flags&512?' Удержание в покое активно.':' Удержание покоя пока не подтверждено.')):'Ожидание калибровки на STM32.';
 }
 function renderImu(){
  const [w,x,y,z]=imu.q;
@@ -623,7 +626,7 @@ function onControls(line){
 }
 function controlMessage(s){
  if(s.startsWith('#E,dual,')){localMessage='Две платы: сначала СТОП, выберите исправный привод и дождитесь подтверждения. Подробности в разделе «Привод».';syncControls();return;}
- const errors={'#E,source,stop':'Переключение возможно только при связи со STM32 и остановленных колёсах.','#E,arm,notready':'Нужны подтверждённый источник, остановка и завершённая калибровка.','#E,cal,travel':'Недостаточный ход: пройдите обе оси в обе стороны.','#E,cal,center':'Перед сохранением отпустите джойстик в центр.','#E,config,stop':'Остановите колёса перед изменением настройки.','#E,command,disarm':'Сначала выключите управление и завершите калибровку.'};
+ const errors={'#E,settings,busy':'Дождитесь результата предыдущей настройки.','#E,settings,link':'Нет свежей связи со STM32: настройка не отправлена.','#E,settings,length':'Команда слишком длинная.','#E,source,stop':'Переключение возможно только при связи со STM32 и остановленных колёсах.','#E,arm,notready':'Нужны подтверждённый источник, остановка и завершённая калибровка.','#E,cal,travel':'Недостаточный ход: пройдите обе оси в обе стороны.','#E,cal,center':'Перед сохранением отпустите джойстик в центр.','#E,config,stop':'Остановите колёса перед изменением настройки.','#E,command,disarm':'Сначала выключите управление и завершите калибровку.'};
  localMessage=errors[s]||s;requestedSource=null;syncControls();log(localMessage+'\n');
 }
 async function guardedSend(c){try{await send(c)}catch(e){localMessage=String(e);syncControls()}}
@@ -794,13 +797,13 @@ function dualRenderTable(){
  }
 }
 async function dualChoose(mask){
- if(control.armed||control.waiting){log('Сначала СТОП\n');return;}
+ if(control.armed||control.waiting){log('Сначала СТОП\n');wheelFeedback(false);return;}
  if(mask!==3&&dualMeta&&(dualMeta.flags&1024)&&!$('limpConfirm').checked){$('dualChoiceResult').textContent='Подтвердите проверку отключаемой оси';return;}
  $('dualChoiceResult').textContent='Запрос отправляется. Режим подтверждается состоянием STM32.';
  await guardedSend('DRIVE='+mask);
 }
 async function dualTargetCommand(command){
- if(control.armed||control.waiting){log('Сначала СТОП\n');return;}
+ if(control.armed||control.waiting){log('Сначала СТОП\n');wheelFeedback(false);return;}
  try{await send('TARGET='+dualSelected);await send(command);}catch(e){log(String(e)+'\n');}
 }
 $('viewNode').onchange=()=>{dualSelected=+$('viewNode').value;resetImu();resetSensors();filled=false;dualRenderSelected();};
